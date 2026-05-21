@@ -54,7 +54,7 @@
         <span class="text-xs text-slate-400">房間:</span>
         <input type="text" id="roomInput" value="room-777" class="bg-transparent text-xs font-bold text-white w-14 focus:outline-none focus:border-brand-500 border-b border-transparent">
         <button id="btnJoinRoom" class="text-xs bg-brand-600 hover:bg-brand-500 text-white font-semibold px-2 py-1 rounded transition mr-1">切換</button>
-        <!-- ⚙️ 新增雲端手動設定按鈕 -->
+        <!-- ⚙️ 設定按鈕 -->
         <button id="btnOpenConfigModal" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-2 py-1 rounded transition flex items-center gap-1">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-brand-400" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.37-.836-2.967.76-2.131 2.13a1.532 1.532 0 01-.948 2.287c-1.56.38-1.56 2.6 0 2.98a1.532 1.532 0 01.948 2.286c-.836 1.372.76 2.967 2.131 2.131a1.532 1.532 0 012.287.948c.38 1.56 2.6 1.56 2.98 0a1.532 1.532 0 012.286-.948c1.37.836 2.967-.76 2.131-2.13a1.532 1.532 0 01.948-2.287c1.56-.38 1.56-2.6 0-2.98a1.532 1.532 0 01-.948-2.286c.836-1.372-.76-2.967-2.131-2.131a1.532 1.532 0 01-2.287-.948zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
@@ -95,19 +95,17 @@
             目前您的平台運作在 <span class="text-amber-400 font-bold">「本地模擬協作模式」</span>。此模式下，系統使用瀏覽器內部通道同步。這表示<strong>只有在同一台電腦的多個分頁</strong>能同步，<strong>跨裝置（如手機和電腦）是無法通訊的</strong>。
           </p>
           <p class="text-xs text-emerald-400 leading-relaxed font-semibold">
-            欲啟用真正的跨裝置（手機 ↔ 電腦）實時協作與聊天，請在下方貼上您申請的 Firebase 網頁 SDK 配置 JSON：
+            欲啟用真正的跨裝置（手機 ↔ 電腦）實時協作與聊天，請直接貼上您從 Firebase 複製的網頁配置程式碼：
           </p>
           <div>
-            <label class="block text-xs text-slate-400 font-bold mb-1.5 uppercase">Firebase Config JSON</label>
-            <textarea id="firebaseConfigInput" rows="6" placeholder='請貼上以下格式：
-{
-  "apiKey": "AIzaSy...",
-  "authDomain": "your-app.firebaseapp.com",
-  "projectId": "your-app",
-  "storageBucket": "your-app.appspot.com",
-  "messagingSenderId": "...",
-  "appId": "..."
-}' class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-brand-500 font-mono"></textarea>
+            <label class="block text-xs text-slate-400 font-bold mb-1.5 uppercase">Firebase Config (支援直接貼上程式碼或 JSON)</label>
+            <textarea id="firebaseConfigInput" rows="6" placeholder='可直接貼上整段程式碼，例如：
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "your-app.firebaseapp.com",
+  projectId: "your-app",
+  ...
+};' class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-brand-500 font-mono"></textarea>
           </div>
           <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-[11px] text-slate-400 space-y-1">
             <span class="font-bold text-slate-300 flex items-center gap-1">
@@ -348,14 +346,16 @@
 
     // 1. 環境檢測：是否配置了真實的 Firebase 金鑰 (檢查 localStorage 是否有手動貼入的真實金鑰)
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'collaborative-video-app';
-    const storedUserConfig = localStorage.getItem('user_firebase_config');
+    
+    // 安全地取得並解析自訂金鑰
     let parsedUserConfig = null;
     try {
+      const storedUserConfig = localStorage.getItem('user_firebase_config');
       if (storedUserConfig) {
         parsedUserConfig = JSON.parse(storedUserConfig);
       }
     } catch(e) {
-      console.error("無法解析自訂 Firebase Config:", e);
+      console.error("無法安全地讀取與解析自訂 Firebase Config:", e);
     }
 
     const isMockConfig = (typeof __firebase_config === 'undefined' || !JSON.parse(__firebase_config).apiKey) && !parsedUserConfig;
@@ -394,7 +394,7 @@
         ]
       },
       chat: [
-        { sender: "系統提示", text: "已為您啟用『本地沙盒協作通道』。由於未偵測到 Firebase 雲端金鑰，目前僅能在一台電腦的多個分頁中同步，跨裝置同步（手機對電腦）需配置金鑰！", type: "action", timestamp: { seconds: Date.now()/1000 } }
+        { sender: "系統提示", text: "已為您啟用『本地沙盒協作通道』。由於未偵測到 Firebase 雲端金鑰，目前僅能在一台電腦的多個分頁中同步，跨裝置同步（手機對電腦）請點擊右上角『設定』貼入金鑰！", type: "action", timestamp: { seconds: Date.now()/1000 } }
       ],
       members: [
         { name: randomNickname, color: memberColor, id: myId }
@@ -423,8 +423,6 @@
     async function initConnection() {
       const statusIndicator = document.getElementById('connectionStatusIndicator');
       const statusText = document.getElementById('connectionStatusText');
-      const loadingText = document.getElementById('loadingText');
-      const loadingSubtext = document.getElementById('loadingSubtext');
 
       if (!isOfflineMode) {
         // 嘗試真實連線
@@ -475,9 +473,13 @@
       document.getElementById('myUserIdLabel').style.color = memberColor;
 
       // 載入本地存儲數據
-      const savedProject = localStorage.getItem(`sandbox_proj_${currentRoomId}`);
-      if (savedProject) {
-        localDb.project = JSON.parse(savedProject);
+      try {
+        const savedProject = localStorage.getItem(`sandbox_proj_${currentRoomId}`);
+        if (savedProject) {
+          localDb.project = JSON.parse(savedProject);
+        }
+      } catch (e) {
+        console.warn("無法載入本地儲存的專案資料:", e);
       }
       
       // 開啟多視窗廣播同步監聽
@@ -618,7 +620,11 @@
       } else {
         // 本地模式：更新 LocalDb 並廣播
         localDb.project = { ...localDb.project, ...updatedFields };
-        localStorage.setItem(`sandbox_proj_${currentRoomId}`, JSON.stringify(localDb.project));
+        try {
+          localStorage.setItem(`sandbox_proj_${currentRoomId}`, JSON.stringify(localDb.project));
+        } catch (e) {
+          console.warn("無法寫入 localStorage 存檔:", e);
+        }
         
         loadTimelineFromSync(localDb.project.timeline);
         
@@ -860,6 +866,52 @@
       showToast("✅ 新增素材同步成功！");
     });
 
+    // ==========================================
+    // 萬能 Firebase 金鑰解析與防呆儲存機制 (Lax Parser)
+    // ==========================================
+    function parseLaxFirebaseConfig(rawText) {
+      let text = rawText.trim();
+      if (!text) {
+        throw new Error("輸入內容為空");
+      }
+
+      // 1. 如果本來就是完全合法的 JSON，直接解析
+      try {
+        return JSON.parse(text);
+      } catch (e) {}
+
+      // 2. 移除 JS 的變數宣告（如 "const firebaseConfig = " 等）與結尾分號
+      let cleanedText = text
+        .replace(/^(const|let|var)\s+\w+\s*=\s*/i, '') // 砍掉變數定義
+        .replace(/;$/, '')                             // 砍掉末尾分號
+        .trim();
+
+      // 3. 再次嘗試直接 JSON 解析
+      try {
+        return JSON.parse(cleanedText);
+      } catch (e) {}
+
+      // 4. 強大正則過濾法：就算是用戶貼了混亂的代碼，也強制把關鍵金鑰欄位抓取出來！
+      const parsedConfig = {};
+      const fields = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId", "measurementId"];
+      
+      fields.forEach(field => {
+        // 匹配格式例如 apiKey: "AIza...", "apiKey": 'AIza...', 'apiKey': `AIza...` 等
+        const regex = new RegExp(`['"]?${field}['"]?\\s*:\\s*['"\`]([^'"\`]+)['"\`]`, "i");
+        const match = cleanedText.match(regex);
+        if (match && match[1]) {
+          parsedConfig[field] = match[1];
+        }
+      });
+
+      // 5. 最終校驗
+      if (parsedConfig.apiKey && parsedConfig.projectId) {
+        return parsedConfig;
+      } else {
+        throw new Error("找不到關鍵的 apiKey 與 projectId 欄位，請確認貼入的是 Firebase Web 配置代碼。");
+      }
+    }
+
     // Firebase 雲端金鑰彈窗與設定邏輯
     const configModal = document.getElementById('firebaseConfigModal');
     const btnOpenConfigModal = document.getElementById('btnOpenConfigModal');
@@ -869,7 +921,7 @@
     const btnClearConfig = document.getElementById('btnClearConfig');
     const firebaseConfigInput = document.getElementById('firebaseConfigInput');
 
-    // 如果 localStorage 內已存有設定，自動填入輸入框中以利編輯
+    // 如果 localStorage 內已存有設定，自動填入輸入框中
     if (storedUserConfig) {
       try {
         firebaseConfigInput.value = JSON.stringify(JSON.parse(storedUserConfig), null, 2);
@@ -899,33 +951,45 @@
     btnCancelConfig.addEventListener('click', closeConfigModal);
     btnCancelConfigX.addEventListener('click', closeConfigModal);
 
-    // 儲存金鑰並刷新
+    // 儲存金鑰（已整合：防呆與萬能解析機制，阻擋點選沒反應之 Bug）
     btnSaveConfig.addEventListener('click', () => {
       const inputVal = firebaseConfigInput.value.trim();
       if (!inputVal) {
-        showToast("⚠️ 請輸入正確的 Firebase Config JSON！");
+        showToast("⚠️ 請先在輸入框中貼上 Firebase 程式碼！");
         return;
       }
+
       try {
-        const parsed = JSON.parse(inputVal);
-        if (!parsed.apiKey || !parsed.projectId) {
-          showToast("⚠️ JSON 格式正確，但缺少關鍵的 apiKey 或 projectId！");
-          return;
+        // 使用我們的超級智慧解析器過濾出乾淨的 Config
+        const cleanedConfig = parseLaxFirebaseConfig(inputVal);
+        
+        // 嘗試寫入 LocalStorage (並加上防崩潰保護，以防特殊隱私模式或沙盒限制)
+        try {
+          localStorage.setItem('user_firebase_config', JSON.stringify(cleanedConfig));
+        } catch (storageError) {
+          console.error("寫入 localStorage 受阻：", storageError);
+          alert("系統成功解析了金鑰，但您的瀏覽器（可能在無痕模式或限制 iframe 中）不允許讀寫本機儲存空間，金鑰重啟後將無法保存。");
         }
-        localStorage.setItem('user_firebase_config', JSON.stringify(parsed));
-        showToast("✅ Firebase 雲端金鑰儲存成功！正在重載並切換為真實雲端模式...");
+
+        showToast("✅ Firebase 雲端金鑰儲存成功！正在重載並切換為實時雲端連線模式...");
+        
         setTimeout(() => {
           window.location.reload();
         }, 1500);
-      } catch (e) {
-        showToast("❌ 金鑰語法格式錯誤！請確保您貼入的是正確的 JSON 物件。");
+
+      } catch (parseError) {
+        // 直接清楚地把解析失敗的原因印給使用者，杜絕沒反應、黑盒子的現象！
+        console.error("解析失敗：", parseError);
+        showToast(`❌ 金鑰解析失敗：${parseError.message || "語法不正確"}`);
       }
     });
 
     // 清除金鑰並還原
     btnClearConfig.addEventListener('click', () => {
-      localStorage.removeItem('user_firebase_config');
-      showToast("🗑️ 已清除自訂金鑰！正在重啟為本地沙盒模式...");
+      try {
+        localStorage.removeItem('user_firebase_config');
+      } catch (e) {}
+      showToast("🗑️ 已清除自訂金鑰！正在重啟並還原為本地沙盒模式...");
       setTimeout(() => {
         window.location.reload();
       }, 1500);
