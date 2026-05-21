@@ -49,7 +49,7 @@
     <div class="flex items-center space-x-3">
       <div class="bg-slate-900 px-4 py-1.5 rounded-xl border border-slate-800 flex items-center space-x-2">
         <span id="connectionStatusIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-        <span id="connectionStatusText" class="text-xs text-slate-300 font-medium">正在偵測連線...</span>
+        <span id="connectionStatusText" class="text-xs text-slate-300 font-medium cursor-pointer">正在偵測連線...</span>
         <span class="text-slate-600">|</span>
         <span class="text-xs text-slate-400">房間:</span>
         <input type="text" id="roomInput" value="room-777" class="bg-transparent text-xs font-bold text-white w-14 focus:outline-none focus:border-brand-500 border-b border-transparent">
@@ -90,6 +90,21 @@
           </button>
         </div>
         
+        <!-- 🚨 雲端故障智慧診斷看板 (動態顯示) -->
+        <div id="firebaseErrorAlert" class="hidden bg-rose-950/60 border border-rose-800/80 rounded-xl p-4 text-xs text-rose-300 space-y-2 mb-4">
+          <div class="flex items-center gap-2 font-bold text-rose-200 text-[13px]">
+            <span class="flex h-2.5 w-2.5 relative">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+            </span>
+            雲端連線失敗診斷：
+          </div>
+          <p id="firebaseErrorText" class="font-mono text-[11px] bg-slate-950 p-2.5 rounded-lg border border-rose-900/40 break-all text-rose-400"></p>
+          <div id="firebaseErrorSolution" class="text-[11px] leading-relaxed text-slate-300 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800">
+            <!-- 動態建議方案 -->
+          </div>
+        </div>
+
         <div class="space-y-4">
           <p class="text-xs text-slate-300 leading-relaxed">
             目前您的平台運作在 <span class="text-amber-400 font-bold">「本地模擬協作模式」</span>。此模式下，系統使用瀏覽器內部通道同步。這表示<strong>只有在同一台電腦的多個分頁</strong>能同步，<strong>跨裝置（如手機和電腦）是無法通訊的</strong>。
@@ -266,7 +281,7 @@ const firebaseConfig = {
           <div class="relative w-full aspect-video bg-black">
             <canvas id="cloudCanvas" width="1280" height="720" class="w-full h-full object-contain bg-black"></canvas>
             
-            <!-- 載入中遮罩層 (已修復：確保可被完美隱藏與點擊穿透) -->
+            <!-- 載入中遮罩層 -->
             <div id="loadingOverlay" class="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center space-y-3 transition-all duration-500 z-40">
               <div class="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
               <p class="text-xs text-slate-300 font-bold tracking-wide" id="loadingText">正在建立安全連線通道...</p>
@@ -373,6 +388,7 @@ const firebaseConfig = {
 
     let app, auth, db;
     let isOfflineMode = isMockConfig; // 標記是否為本地沙盒模式
+    let firebaseInitError = null; // 儲存 Firebase 初始化失敗的錯誤內容
 
     // 隨機創作者資訊
     const nicknameSuffixes = ["剪輯大師", "視覺總監", "調色工程師", "特效總管", "混音大腕", "導演剪接手"];
@@ -439,19 +455,27 @@ const firebaseConfig = {
             await signInAnonymously(auth);
           }
 
+          // 連線測試：嘗試獲取基礎文件，若規則沒開或資料庫未啟用會直接在此報錯，以便診斷
+          const testRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', currentRoomId);
+          await getDoc(testRef);
+
           onAuthStateChanged(auth, (user) => {
             if (user) {
               currentUser = user;
-              statusIndicator.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+              statusIndicator.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse cursor-pointer";
               statusText.innerText = "實時雲端連線中";
-              statusText.className = "text-xs text-emerald-400 font-bold";
+              statusText.className = "text-xs text-emerald-400 font-bold cursor-pointer";
+              statusText.onclick = null;
+              statusIndicator.onclick = null;
+              
               document.getElementById('myUserIdLabel').innerText = `${randomNickname} (${user.uid.substring(0, 5)})`;
               document.getElementById('myUserIdLabel').style.color = memberColor;
               joinRoom(currentRoomId);
             }
           });
         } catch (e) {
-          console.warn("Firebase 雲端初始化失敗，自動切換至本地沙盒:", e);
+          console.error("Firebase 雲端初始化失敗，自動切換至本地沙盒:", e);
+          firebaseInitError = e; // 記錄錯誤物件以利診斷
           isOfflineMode = true;
           setupOfflineSandbox();
         }
@@ -466,9 +490,23 @@ const firebaseConfig = {
       const statusIndicator = document.getElementById('connectionStatusIndicator');
       const statusText = document.getElementById('connectionStatusText');
       
-      statusIndicator.className = "w-2.5 h-2.5 rounded-full bg-amber-500";
-      statusText.innerText = "本地模擬協作模式";
-      statusText.className = "text-xs text-amber-400 font-bold";
+      // 如果是用戶手動配置了金鑰卻連線失敗，則顯示紅色警示診斷燈
+      if (parsedUserConfig && firebaseInitError) {
+        statusIndicator.className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse cursor-pointer";
+        statusText.innerText = "⚠️ 雲端連線錯誤 (點擊排查)";
+        statusText.className = "text-xs text-rose-400 font-bold cursor-pointer underline decoration-dotted";
+        
+        // 點擊燈號直接打開智慧診斷看板
+        const triggerDiagnosis = () => showFirebaseErrorDialog(firebaseInitError);
+        statusText.onclick = triggerDiagnosis;
+        statusIndicator.onclick = triggerDiagnosis;
+      } else {
+        statusIndicator.className = "w-2.5 h-2.5 rounded-full bg-amber-500";
+        statusText.innerText = "本地模擬協作模式";
+        statusText.className = "text-xs text-amber-400 font-bold";
+        statusText.onclick = null;
+        statusIndicator.onclick = null;
+      }
       
       document.getElementById('myUserIdLabel').innerText = `${randomNickname} (本機)`;
       document.getElementById('myUserIdLabel').style.color = memberColor;
@@ -535,7 +573,12 @@ const firebaseConfig = {
         overlay.classList.add('opacity-0', 'pointer-events-none');
         setTimeout(() => {
           overlay.classList.add('hidden'); // 確保點擊可以穿透
-          showToast(`成功建立協作通道：${currentRoomId}`);
+          if (parsedUserConfig && firebaseInitError) {
+            showToast("⚠️ Firebase 雲端初始化受阻，已為您展開故障診斷。");
+            showFirebaseErrorDialog(firebaseInitError);
+          } else {
+            showToast(`成功建立協作通道：${currentRoomId}`);
+          }
         }, 500);
       }
     }
@@ -804,7 +847,7 @@ const firebaseConfig = {
           const newTimeline = timelineItems.filter((_, i) => i !== idx);
           
           await updateProjectData({ timeline: newTimeline.map(({id, name, src, duration, type}) => ({id, name, src, duration, type})) });
-          await sendChatMessage(`移除了剪輯素材：${item.name}`, 'action');
+          await sendChatMessage(`移成了剪輯素材：${item.name}`, 'action');
         });
       });
     }
@@ -911,6 +954,75 @@ const firebaseConfig = {
       } else {
         throw new Error("找不到關鍵的 apiKey 與 projectId 欄位，請確認貼入的是 Firebase Web 配置代碼。");
       }
+    }
+
+    // ==========================================
+    // 🛠️ 雲端故障智慧診斷模組 (Interactive Diagnosis)
+    // ==========================================
+    function showFirebaseErrorDialog(err) {
+      const errorAlert = document.getElementById('firebaseErrorAlert');
+      const errorText = document.getElementById('firebaseErrorText');
+      const errorSolution = document.getElementById('firebaseErrorSolution');
+
+      const errStr = err.toString();
+      errorText.innerText = errStr;
+      
+      let solution = "";
+
+      // 針對最常見的 Firebase 後台未設定進行情境引導：
+      if (errStr.includes('auth/operation-not-allowed') || errStr.includes('anonymous') || errStr.includes('auth/admin-restricted-operation')) {
+        solution = `
+          <div class="space-y-2">
+            <p class="font-bold text-emerald-400">💡 診斷結果：您忘記開啟 Firebase 的『匿名驗證』服務了！</p>
+            <p class="text-[11px] text-slate-300">本系統採用安全的匿名憑證來防止髒資料。請立即照以下方式開啟：</p>
+            <ol class="list-decimal pl-4 space-y-1 text-slate-400 text-[11px]">
+              <li>進入您的 <a href="https://console.firebase.google.com/" target="_blank" class="text-brand-400 underline hover:text-brand-300">Firebase 控制台</a>。</li>
+              <li>點擊左側選單的 <b>Build ➔ Authentication</b>，並點擊 <b>Get Started</b> 啟用驗證功能。</li>
+              <li>在頂部的標籤頁選擇 <b>Sign-in method</b>（登入方式）。</li>
+              <li>點擊下方 <b>Anonymous (匿名)</b> 選項，將其改為 <b>Enable (啟用)</b> 並儲存。</li>
+              <li>重整網頁，您的手機和電腦就會立刻自動同步連通！</li>
+            </ol>
+          </div>
+        `;
+      } else if (errStr.includes('permission-denied') || errStr.includes('rules') || errStr.includes('Firestore')) {
+        solution = `
+          <div class="space-y-2">
+            <p class="font-bold text-emerald-400">💡 診斷結果：您的 Firestore Database 資料庫尚未建立或安全規則阻擋了寫入！</p>
+            <p class="text-[11px] text-slate-300">請前往後台將資料庫調整為允許讀寫：</p>
+            <ol class="list-decimal pl-4 space-y-1 text-slate-400 text-[11px]">
+              <li>進入您的 Firebase 控制台，點擊左側 <b>Build ➔ Firestore Database</b>。</li>
+              <li>點選 <b>Create database</b>（建立資料庫），並選擇一個與您最近的地區（如亞洲-東亞）。</li>
+              <li>在安全規則步驟中，請選擇 <b>Start in test mode</b>（以測試模式啟動），或到 <b>Rules</b> 標籤頁將安全規則修改為允許讀寫：<br>
+              <code class="block bg-slate-950 p-1 rounded text-amber-300 text-[10px] mt-1">allow read, write: if true;</code></li>
+              <li>完成後重新整網頁即可！</li>
+            </ol>
+          </div>
+        `;
+      } else {
+        solution = `
+          <div class="space-y-2">
+            <p class="font-bold text-amber-400">💡 診斷結果：Firebase 金鑰參數解析正常，但無法與伺服器建立握手連線。</p>
+            <p class="text-[11px] text-slate-300">請嘗試以下排除法：</p>
+            <ul class="list-disc pl-4 space-y-1 text-slate-400 text-[11px]">
+              <li>檢查您的金鑰是否複製完整（大括號內有無缺少引號、逗號）。</li>
+              <li>檢查您的網路環境是否開啟了會阻擋 Google Service API 的 VPN 或廣告防火牆。</li>
+              <li>確認您在 Firebase 建立的是「網頁 (Web) 應用程式」，而不是 iOS 或 Android 應用程式。</li>
+            </ul>
+          </div>
+        `;
+      }
+
+      errorSolution.innerHTML = solution;
+      errorAlert.classList.remove('hidden');
+
+      // 自動開啟設定 Modal 讓用戶查看故障原因
+      const configModal = document.getElementById('firebaseConfigModal');
+      configModal.classList.remove('hidden');
+      setTimeout(() => {
+        configModal.classList.remove('opacity-0');
+        configModal.querySelector('.transform').classList.remove('scale-95');
+        configModal.querySelector('.transform').classList.add('scale-100');
+      }, 10);
     }
 
     // Firebase 雲端金鑰彈窗與設定邏輯
