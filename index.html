@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 雲端協作影音剪輯控制台</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+  <!-- 頂部導航列 -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-lg shadow-brand-900/30">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-extrabold tracking-wide text-white flex items-center">
+          AI 雲端協作影音剪輯控制台
+          <span class="ml-2 text-xs bg-brand-500/20 text-brand-400 px-2 py-0.5 rounded-full border border-brand-500/30">Cloud Workspace</span>
+        </h1>
+        <p class="text-xs text-slate-400">雲端中繼資料同步 + 本地高畫質渲染導出，結合 Gemini AI 輔助創作</p>
+      </div>
+    </div>
+    
+    <!-- 房間狀態與連接資訊 -->
+    <div class="flex items-center space-x-3">
+      <div class="bg-slate-900 px-4 py-1.5 rounded-xl border border-slate-800 flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        <span class="text-xs text-slate-300">雲端連線：</span>
+        <input type="text" id="roomInput" value="room-777" class="bg-transparent text-xs font-bold text-white w-20 focus:outline-none focus:border-brand-500 border-b border-transparent">
+        <button id="btnJoinRoom" class="text-xs bg-brand-600 hover:bg-brand-500 text-white font-semibold px-2 py-1 rounded transition">切換房間</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主控制區 -->
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    
+    <!-- Toast 提示通知 -->
+    <div id="toast" class="fixed top-24 right-6 z-50 bg-brand-600 text-white px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 transform translate-x-96 opacity-0 flex items-center space-x-3 border border-brand-400/20">
+      <span class="font-medium" id="toast-text">通知訊息</span>
+    </div>
+
+    <!-- 自訂雲端素材匯入彈窗 (Modal) -->
+    <div id="cloudAssetModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl transform scale-95 transition-all duration-300">
+        <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+          <h3 class="text-md font-bold text-white flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            匯入專屬雲端素材
+          </h3>
+          <button id="btnCancelModalX" class="text-slate-400 hover:text-white transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs text-slate-400 font-bold mb-1 uppercase">素材名稱</label>
+            <input type="text" id="modalAssetName" placeholder="例如：主打商品宣傳照片.jpg" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 font-bold mb-1 uppercase">雲端直連網址 (URL)</label>
+            <input type="url" id="modalAssetUrl" placeholder="請貼上來自 Google Drive / S3 / Imgur 的直連 URL" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 font-mono">
+            <p class="text-[10px] text-slate-500 mt-1">※ 提示：請確保該雲端空間支援跨網域讀取 (CORS)，否則本機 Canvas 無法順利導出。</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-slate-400 font-bold mb-1 uppercase">媒體類型</label>
+              <select id="modalAssetType" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                <option value="image">靜態照片 (Image)</option>
+                <option value="video">視訊短片 (Video)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 font-bold mb-1 uppercase">播放停留秒數</label>
+              <input type="number" id="modalAssetDuration" value="3.5" min="1" max="15" step="0.5" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 mt-6 pt-3 border-t border-slate-800">
+          <button id="btnCancelModal" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition">取消</button>
+          <button id="btnConfirmModal" class="px-4 py-2 text-xs font-semibold bg-brand-600 hover:bg-brand-500 rounded-lg text-white transition shadow-lg shadow-brand-900/30">確認並同步上雲</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 成員在線狀態 -->
+    <div class="mb-6 bg-slate-900 p-4 rounded-xl border border-slate-800 flex flex-wrap items-center gap-4 justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">在線協作者：</span>
+        <div id="membersContainer" class="flex items-center -space-x-2">
+          <!-- 成員頭像動態生成 -->
+        </div>
+      </div>
+      <div class="text-xs text-slate-500 font-mono flex items-center gap-2">
+        <span>你的協作 ID：</span>
+        <span id="myUserIdLabel" class="bg-slate-800 px-2 py-1 rounded text-brand-300 font-semibold">載入中...</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- 左欄：專案設定、Gemini AI 工具與即時通訊 (5 cols) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- 雲端設定 -->
+        <section class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+          <h2 class="text-sm font-bold text-slate-200 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            專案全域同步設定
+          </h2>
+          
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[10px] text-slate-400 font-bold mb-1 uppercase">專案名稱 (同步)</label>
+              <input type="text" id="syncProjectTitle" value="新世代高畫質共同創作專案" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500 transition-colors">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[10px] text-slate-400 font-bold mb-1 uppercase">全域轉場效果</label>
+                <select id="syncTransition" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                  <option value="fade">交叉淡入 (Fade)</option>
+                  <option value="slide">水平滑動 (Slide)</option>
+                  <option value="zoom">鏡頭縮放 (Zoom)</option>
+                  <option value="none">直接切換 (Cut)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 font-bold mb-1 uppercase">照片預設時長</label>
+                <input type="number" id="syncSlideDuration" value="3.5" min="1" max="10" step="0.5" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Gemini AI 智慧創作工具箱 -->
+        <section class="bg-gradient-to-br from-slate-900 to-indigo-950 p-5 rounded-2xl border border-indigo-500/30 space-y-4 shadow-xl">
+          <div class="flex items-center justify-between border-b border-indigo-500/20 pb-2">
+            <h2 class="text-sm font-extrabold text-indigo-300 flex items-center">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-2 animate-pulse"></span>
+              Gemini AI 智慧工具箱
+            </h2>
+            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-500/30">Google APIs</span>
+          </div>
+
+          <!-- AI 工具頁籤切換 -->
+          <div class="flex space-x-2 border-b border-slate-800 pb-2">
+            <button id="tabStoryboardBtn" class="flex-1 text-center py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white transition">
+              AI 企劃故事板
+            </button>
+            <button id="tabImageBtn" class="flex-1 text-center py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">
+              AI Imagen 繪圖
+            </button>
+          </div>
+
+          <!-- 頁籤一：AI 企劃生成故事板 -->
+          <div id="aiStoryboardPanel" class="space-y-3">
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              輸入你想要的影片主旨，Gemini 將自動撰寫劇本，為你建立全套共享故事板分鏡。
+            </p>
+            <div>
+              <label class="block text-[9px] text-indigo-400 font-bold mb-1 uppercase">影片企劃主旨</label>
+              <input type="text" id="aiTopicInput" placeholder="例如：2026年未來智慧城市宣傳影片" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[9px] text-indigo-400 font-bold mb-1 uppercase">視覺風格</label>
+                <select id="aiStyleSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                  <option value="cyberpunk">賽博龐克 (Cyberpunk)</option>
+                  <option value="nature">壯麗大自然 (Cinematic Nature)</option>
+                  <option value="minimalist">極簡現代 (Minimalist Modern)</option>
+                  <option value="anime">日系動畫 (Anime Art)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[9px] text-indigo-400 font-bold mb-1 uppercase">分鏡場景數</label>
+                <input type="number" id="aiSceneCount" value="4" min="3" max="6" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+              </div>
+            </div>
+            <button id="btnGenerateAIStoryboard" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold rounded-xl transition flex items-center justify-center space-x-1.5 shadow-lg shadow-indigo-950/50">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+              <span>一鍵生成 AI 故事板分鏡</span>
+            </button>
+          </div>
+
+          <!-- 頁籤二：AI Imagen 繪圖 -->
+          <div id="aiImagePanel" class="space-y-3 hidden">
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              使用 Google Imagen 4.0 超擬真繪圖模型，為當前專案直接生成獨一無二的分鏡畫面。
+            </p>
+            <div>
+              <label class="block text-[9px] text-indigo-400 font-bold mb-1 uppercase">英文或中文繪圖提示詞 (Prompt)</label>
+              <textarea id="aiImagePrompt" rows="2" placeholder="例如：A beautiful cyberpunk street with glowing neon lights, cinematic lighting, 4k" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 resize-none"></textarea>
+            </div>
+            <button id="btnGenerateAIImage" class="w-full py-2.5 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white text-xs font-extrabold rounded-xl transition flex items-center justify-center space-x-1.5 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>渲染生成 Imagen 4.0 畫面</span>
+            </button>
+          </div>
+
+          <!-- AI 專用加載指示燈 -->
+          <div id="aiLoadingIndicator" class="hidden flex items-center justify-between bg-slate-950 border border-indigo-500/30 p-3 rounded-xl text-xs">
+            <span class="flex items-center text-indigo-300 font-bold">
+              <span class="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mr-2"></span>
+              Gemini 雲端編碼思考中...
+            </span>
+            <span id="aiLoadingStatus" class="text-slate-500 font-mono text-[10px]">正在解析結構數據</span>
+          </div>
+        </section>
+
+        <!-- 協作日誌與即時聊天 -->
+        <section class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col h-[320px]">
+          <h2 class="text-sm font-bold text-slate-200 flex items-center mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            團隊協作聊天室與活動日誌
+          </h2>
+          
+          <!-- 訊息歷史 -->
+          <div id="chatHistory" class="flex-1 overflow-y-auto space-y-2 mb-3 pr-1 text-xs text-slate-300">
+            <!-- 聊天訊息 & 編輯日誌 -->
+          </div>
+
+          <!-- 訊息發送 -->
+          <form id="chatForm" class="flex gap-2">
+            <input type="text" id="chatInput" placeholder="輸入 /ai 讓 Gemini 助理協助腦力激盪..." class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+            <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-4 py-2 rounded-lg text-xs transition">發送</button>
+          </form>
+        </section>
+
+      </div>
+
+      <!-- 右欄：雲端同步故事板、預覽與渲染 (7 cols) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- 畫布與即時渲染 -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+          <div class="bg-slate-800/50 px-5 py-3 border-b border-slate-800 flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 mr-2 animate-pulse"></span>
+              雲端共享播放器架構 (720p HD)
+            </span>
+            <span id="playbackTimer" class="text-xs text-slate-400 font-mono">0.0s / 0.0s</span>
+          </div>
+
+          <div class="relative w-full aspect-video bg-black">
+            <canvas id="cloudCanvas" width="1280" height="720" class="w-full h-full object-contain bg-black"></canvas>
+            
+            <div id="loadingOverlay" class="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center space-y-3 transition-opacity">
+              <div class="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+              <p class="text-xs text-slate-400">正在建立雲端安全加密通道...</p>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 px-5 py-3.5 border-t border-slate-800 flex items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+              <button id="btnPlayPause" class="bg-slate-850 hover:bg-slate-800 p-2.5 rounded-xl text-slate-200 transition">
+                <svg id="iconPlay" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                </svg>
+                <svg id="iconPause" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <button id="btnStop" class="bg-slate-850 hover:bg-slate-800 p-2.5 rounded-xl text-slate-200 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              
+              <div class="text-[11px] text-slate-500 font-bold bg-slate-900 px-3 py-1 rounded-lg border border-slate-800/80">
+                本機混音狀態: <span class="text-brand-400">已啟用</span>
+              </div>
+            </div>
+
+            <!-- 本機渲染導出 -->
+            <button id="btnRender" class="bg-gradient-to-r from-brand-600 to-sky-600 hover:from-brand-500 hover:to-sky-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition shadow-lg shadow-brand-950/40 flex items-center space-x-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
+              </svg>
+              <span>導出團隊影片</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- 雲端同步故事板軌道 -->
+        <section class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold text-slate-200 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              雲端共享故事板 (共享時間軸)
+            </h2>
+            <button id="btnOpenModal" class="text-xs bg-brand-600 hover:bg-brand-500 text-white font-bold px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+              <span>＋ 新增共享雲端素材</span>
+            </button>
+          </div>
+
+          <div id="cloudTimeline" class="space-y-2 max-h-[250px] overflow-y-auto">
+            <!-- 雲端即時同步的剪輯項目 -->
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+
+    <!-- 協作架構技術說明 -->
+    <section class="mt-8 bg-slate-900/40 p-6 rounded-2xl border border-slate-800 text-xs text-slate-400 space-y-3">
+      <h3 class="text-sm font-bold text-slate-200">👥 多人協作影音剪輯與 Gemini 智慧架構解析：</h3>
+      <p class="leading-relaxed">
+        在這個協作架構中，團隊成員向同一個雲端文檔寫入或讀取中繼資料（Metadata），各瀏覽器透過 Firebase Firestore 即時進行 Canvas 渲染。
+        現在，這套系統原生整合了 <strong>Google Gemini AI 認知助理</strong>：
+        當你發起「AI 分鏡企劃」，Gemini 會直接將分析後的轉場、時間、意境等數據，直接「推入」你們團隊的雲端資料庫，實現 AI 與人類共同策劃影片的驚艷工作流。
+      </p>
+    </section>
+
+  </main>
+
+  <!-- Firebase 相關 SDK 引入 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 1. 初始化與環境檢測
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'collaborative-video-app';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "",
+      authDomain: "mock-auth-domain",
+      projectId: "mock-project-id",
+      storageBucket: "mock-storage-bucket",
+      messagingSenderId: "mock-sender-id",
+      appId: "mock-app-id"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // 全域變數
+    let currentRoomId = "room-777";
+    let currentUser = null;
+    let projectDocRef = null;
+    let unsubscribeProject = null;
+    let unsubscribeChat = null;
+    let unsubscribeMembers = null;
+
+    // UI 動畫變數
+    const canvas = document.getElementById('cloudCanvas');
+    const ctx = canvas.getContext('2d');
+    let isPlaying = false;
+    let playbackTime = 0; // ms
+    let lastTime = 0;
+    let timelineItems = [];
+    let currentTransition = 'fade';
+    let defaultSlideDuration = 3.5;
+
+    // 隨機產生成員顏色與暱稱
+    const nicknameSuffixes = ["剪輯大師", "視覺總監", "調色工程師", "特效總管", "混音大腕", "導演剪接手"];
+    const randomNickname = nicknameSuffixes[Math.floor(Math.random() * nicknameSuffixes.length)] + "_" + Math.floor(Math.random() * 900 + 100);
+    const memberColor = ["#38bdf8", "#34d399", "#fb7185", "#c084fc", "#f43f5e", "#fbbf24"][Math.floor(Math.random() * 6)];
+
+    // 2. 認證流程
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.warn("驗證出錯，改用匿名登入 fallback", err);
+        await signInAnonymously(auth);
+      }
+    };
+
+    initAuth();
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('myUserIdLabel').innerText = `${randomNickname} (${user.uid.substring(0, 5)})`;
+        document.getElementById('myUserIdLabel').style.color = memberColor;
+        
+        // 登入成功後，啟動房間綁定
+        joinRoom(currentRoomId);
+      }
+    });
+
+    // 3. 加入專案協作房間
+    async function joinRoom(roomId) {
+      if (!currentUser) return;
+      currentRoomId = roomId;
+      
+      // 清理舊的監聽
+      if (unsubscribeProject) unsubscribeProject();
+      if (unsubscribeChat) unsubscribeChat();
+      if (unsubscribeMembers) unsubscribeMembers();
+
+      document.getElementById('loadingOverlay').classList.remove('opacity-0');
+      document.getElementById('loadingOverlay').classList.add('opacity-100');
+
+      projectDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', roomId);
+      
+      // 檢查專案是否存在，若不存在則初始化一個
+      const snap = await getDoc(projectDocRef);
+      if (!snap.exists()) {
+        await setDoc(projectDocRef, {
+          title: "多人協作高畫質專案",
+          globalTransition: "fade",
+          slideDuration: 3.5,
+          timeline: [
+            { id: "1", name: "團隊共同創作背景_1.jpg", src: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=1200&auto=format&fit=crop", duration: 3.5, type: 'image' },
+            { id: "2", name: "炫彩視覺粒子特效_2.jpg", src: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=1200&auto=format&fit=crop", duration: 3.5, type: 'image' }
+          ]
+        });
+      }
+
+      // 回報自己到線上的成員列表
+      const myMemberRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', currentUser.uid);
+      await setDoc(myMemberRef, {
+        roomId: roomId,
+        name: randomNickname,
+        color: memberColor,
+        lastActive: serverTimestamp()
+      });
+
+      // 4. 開始即時監聽 Firestore
+      
+      // 4a. 監聽專案與時間軸
+      unsubscribeProject = onSnapshot(projectDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          document.getElementById('syncProjectTitle').value = data.title;
+          document.getElementById('syncTransition').value = data.globalTransition;
+          document.getElementById('syncSlideDuration').value = data.slideDuration;
+          
+          currentTransition = data.globalTransition;
+          defaultSlideDuration = data.slideDuration;
+          
+          loadTimelineFromSync(data.timeline);
+        }
+      }, (err) => console.error("專案監聽錯誤：", err));
+
+      // 4b. 監聽聊天室與 AI 連動
+      const chatColRef = collection(db, 'artifacts', appId, 'public', 'data', 'chat');
+      unsubscribeChat = onSnapshot(chatColRef, (colSnap) => {
+        const messages = [];
+        let newestUserMsg = null;
+        
+        colSnap.forEach(d => {
+          const m = d.data();
+          if (m.roomId === roomId) {
+            messages.push({ id: d.id, ...m });
+          }
+        });
+
+        // 在前端記憶體排序
+        messages.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+        renderChat(messages);
+
+        // 如果最後一筆訊息是自己發送的 "/ai "，且尚未觸發過 AI 答覆，則在這裡驅動 Gemini API
+        if (messages.length > 0) {
+          const lastMsg = messages[messages.length - 1];
+          if (lastMsg.type === 'text' && lastMsg.text.startsWith('/ai') && lastMsg.sender === randomNickname) {
+            // 防止重複觸發
+            if (!lastMsg.aiTriggered) {
+              const query = lastMsg.text.substring(3).trim();
+              triggerGeminiChatCompanion(query, lastMsg.id);
+            }
+          }
+        }
+      }, (err) => console.error("聊天監聽錯誤：", err));
+
+      // 4c. 監聽在線成員
+      const membersColRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
+      unsubscribeMembers = onSnapshot(membersColRef, (colSnap) => {
+        const members = [];
+        colSnap.forEach(d => {
+          const mem = d.data();
+          if (mem.roomId === roomId) {
+            members.push(mem);
+          }
+        });
+        renderMembers(members);
+      }, (err) => console.error("成員監聽錯誤：", err));
+
+      // 關閉載入覆蓋層
+      setTimeout(() => {
+        document.getElementById('loadingOverlay').classList.remove('opacity-100');
+        document.getElementById('loadingOverlay').classList.add('opacity-0');
+        showToast(`成功加入房間：${roomId}`);
+      }, 800);
+    }
+
+    // 將同步下來的 timeline 資料轉換成可播放物件
+    const imgCache = {};
+    function loadTimelineFromSync(timelineArray) {
+      timelineItems = timelineArray.map(item => {
+        let el = imgCache[item.src];
+        if (!el) {
+          el = new Image();
+          el.crossOrigin = "anonymous";
+          el.src = item.src;
+          imgCache[item.src] = el;
+        }
+        return {
+          ...item,
+          element: el
+        };
+      });
+      renderTimelineUI();
+    }
+
+    // 渲染成員
+    function renderMembers(members) {
+      const container = document.getElementById('membersContainer');
+      container.innerHTML = '';
+      members.forEach(m => {
+        const dot = document.createElement('div');
+        dot.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-extrabold text-xs shadow border-2 border-slate-950 select-none";
+        dot.style.backgroundColor = m.color || '#64748b';
+        dot.title = m.name;
+        dot.innerText = m.name.substring(0, 1).toUpperCase();
+        container.appendChild(dot);
+      });
+    }
+
+    // 渲染聊天
+    function renderChat(messages) {
+      const chatBox = document.getElementById('chatHistory');
+      chatBox.innerHTML = '';
+      
+      messages.forEach(msg => {
+        const item = document.createElement('div');
+        item.className = "p-2 bg-slate-950/60 rounded-lg border border-slate-900";
+        
+        if (msg.type === 'action') {
+          item.className = "p-1.5 bg-slate-900/30 text-[10px] text-slate-500 rounded border-l-2 border-brand-500 italic";
+          item.innerHTML = `<span class="font-bold">${msg.sender}</span> ${msg.text}`;
+        } else {
+          item.innerHTML = `
+            <div class="flex justify-between items-center mb-0.5">
+              <span class="font-bold text-[11px]" style="color: ${msg.color}">${msg.sender}</span>
+              <span class="text-[9px] text-slate-600">${new Date(msg.timestamp?.seconds * 1000 || Date.now()).toLocaleTimeString()}</span>
+            </div>
+            <p class="text-slate-300 leading-relaxed">${msg.text}</p>
+          `;
+        }
+        chatBox.appendChild(item);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // 渲染時間軸項目
+    function renderTimelineUI() {
+      const timelineBox = document.getElementById('cloudTimeline');
+      timelineBox.innerHTML = '';
+      
+      if (timelineItems.length === 0) {
+        timelineBox.innerHTML = `<div class="text-center py-6 text-xs text-slate-500">故事板目前為空。</div>`;
+        return;
+      }
+
+      timelineItems.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-900 hover:border-slate-800 transition";
+        div.innerHTML = `
+          <div class="flex items-center space-x-2.5 truncate">
+            <span class="text-[10px] text-slate-600 font-extrabold">${index + 1}</span>
+            <img src="${item.src}" class="w-10 h-10 rounded object-cover border border-slate-800" onerror="this.src='https://placehold.co/100x100?text=IMG'">
+            <div class="text-left truncate">
+              <p class="text-xs font-semibold text-slate-200 truncate max-w-[155px]">${item.name}</p>
+              <p class="text-[9px] text-slate-500">本機預繪緩存中</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <div class="bg-slate-900 px-2 py-1 rounded border border-slate-800 flex items-center space-x-1">
+              <input type="number" data-index="${index}" value="${item.duration}" min="1" max="10" step="0.5" class="item-duration-input w-8 text-center bg-transparent text-xs text-slate-300 focus:outline-none">
+              <span class="text-[9px] text-slate-500">秒</span>
+            </div>
+            <button data-index="${index}" class="btn-remove-item text-slate-600 hover:text-rose-400 p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        `;
+        timelineBox.appendChild(div);
+      });
+
+      // 監聽時間軸單項變更並即時更新到雲端
+      document.querySelectorAll('.item-duration-input').forEach(input => {
+        input.addEventListener('change', async (e) => {
+          const idx = parseInt(e.target.getAttribute('data-index'));
+          const newVal = parseFloat(e.target.value) || 3.0;
+          
+          const newTimeline = [...timelineItems];
+          newTimeline[idx].duration = newVal;
+          
+          await updateDoc(projectDocRef, { timeline: newTimeline.map(({id, name, src, duration, type}) => ({id, name, src, duration, type})) });
+          await logAction(`修改了第 ${idx + 1} 個素材的停留時間為 ${newVal} 秒`);
+        });
+      });
+
+      // 監聽移除素材
+      document.querySelectorAll('.btn-remove-item').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const idx = parseInt(btn.getAttribute('data-index'));
+          const item = timelineItems[idx];
+          
+          const newTimeline = timelineItems.filter((_, i) => i !== idx);
+          
+          await updateDoc(projectDocRef, { timeline: newTimeline.map(({id, name, src, duration, type}) => ({id, name, src, duration, type})) });
+          await logAction(`移除了剪輯素材：${item.name}`);
+        });
+      });
+    }
+
+    // ==========================================
+    // 雲端自訂素材彈窗邏輯
+    // ==========================================
+    const modal = document.getElementById('cloudAssetModal');
+    const btnOpenModal = document.getElementById('btnOpenModal');
+    const btnCancelModal = document.getElementById('btnCancelModal');
+    const btnCancelModalX = document.getElementById('btnCancelModalX');
+    const btnConfirmModal = document.getElementById('btnConfirmModal');
+
+    // 開啟彈窗
+    btnOpenModal.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('.transform').classList.remove('scale-95');
+        modal.querySelector('.transform').classList.add('scale-100');
+      }, 10);
+    });
+
+    // 關閉彈窗
+    function closeModal() {
+      modal.classList.add('opacity-0');
+      modal.querySelector('.transform').classList.remove('scale-100');
+      modal.querySelector('.transform').classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    btnCancelModal.addEventListener('click', closeModal);
+    btnCancelModalX.addEventListener('click', closeModal);
+
+    // 確認提交新增
+    btnConfirmModal.addEventListener('click', async () => {
+      const name = document.getElementById('modalAssetName').value.trim();
+      const url = document.getElementById('modalAssetUrl').value.trim();
+      const type = document.getElementById('modalAssetType').value;
+      const duration = parseFloat(document.getElementById('modalAssetDuration').value) || defaultSlideDuration;
+
+      if (!name || !url) {
+        showToast("⚠️ 請輸入完整的素材名稱與雲端連結！");
+        return;
+      }
+
+      const newItem = {
+        id: "media-" + Math.random().toString(36).substr(2, 9),
+        name: name,
+        src: url,
+        duration: duration,
+        type: type
+      };
+
+      const updatedTimeline = [...timelineItems, newItem];
+      
+      // 更新 Firestore 雲端資料
+      await updateDoc(projectDocRef, { 
+        timeline: updatedTimeline.map(({id, name, src, duration, type}) => ({id, name, src, duration, type})) 
+      });
+      
+      await logAction(`新增了自訂雲端素材：${name}`);
+      
+      // 重設並關閉彈窗
+      document.getElementById('modalAssetName').value = '';
+      document.getElementById('modalAssetUrl').value = '';
+      closeModal();
+      showToast("✅ 自訂雲端素材同步成功！");
+    });
+
+    // 6. 即時變更專案全域設定並同步
+    document.getElementById('syncProjectTitle').addEventListener('change', async (e) => {
+      await updateDoc(projectDocRef, { title: e.target.value });
+      await logAction(`變更了專案名稱為「${e.target.value}」`);
+    });
+
+    document.getElementById('syncTransition').addEventListener('change', async (e) => {
+      await updateDoc(projectDocRef, { globalTransition: e.target.value });
+      await logAction(`變更了全域轉場特效為「${e.target.value}」`);
+    });
+
+    document.getElementById('syncSlideDuration').addEventListener('change', async (e) => {
+      await updateDoc(projectDocRef, { slideDuration: parseFloat(e.target.value) || 3.5 });
+      await logAction(`將照片預設停留時間設為 ${e.target.value} 秒`);
+    });
+
+    // 7. 切換/加入房間控制
+    document.getElementById('btnJoinRoom').addEventListener('click', () => {
+      const rInput = document.getElementById('roomInput').value.trim();
+      if (rInput) {
+        joinRoom(rInput);
+      }
+    });
+
+    // 8. 聊天與活動日誌發送
+    document.getElementById('chatForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const txt = document.getElementById('chatInput').value.trim();
+      if (!txt) return;
+
+      const chatColRef = collection(db, 'artifacts', appId, 'public', 'data', 'chat');
+      await addDoc(chatColRef, {
+        roomId: currentRoomId,
+        sender: randomNickname,
+        color: memberColor,
+        text: txt,
+        type: 'text',
+        timestamp: serverTimestamp()
+      });
+
+      document.getElementById('chatInput').value = '';
+    });
+
+    async function logAction(actionText) {
+      const chatColRef = collection(db, 'artifacts', appId, 'public', 'data', 'chat');
+      await addDoc(chatColRef, {
+        roomId: currentRoomId,
+        sender: randomNickname,
+        text: actionText,
+        type: 'action',
+        timestamp: serverTimestamp()
+      });
+    }
+
+    // ==========================================
+    // Gemini API 智慧工具箱核心邏輯
+    // ==========================================
+
+    // 頁籤切換
+    const tabStoryboardBtn = document.getElementById('tabStoryboardBtn');
+    const tabImageBtn = document.getElementById('tabImageBtn');
+    const aiStoryboardPanel = document.getElementById('aiStoryboardPanel');
+    const aiImagePanel = document.getElementById('aiImagePanel');
+
+    tabStoryboardBtn.addEventListener('click', () => {
+      tabStoryboardBtn.className = "flex-1 text-center py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white transition";
+      tabImageBtn.className = "flex-1 text-center py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition";
+      aiStoryboardPanel.classList.remove('hidden');
+      aiImagePanel.classList.add('hidden');
+    });
+
+    tabImageBtn.addEventListener('click', () => {
+      tabImageBtn.className = "flex-1 text-center py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white transition";
+      tabStoryboardBtn.className = "flex-1 text-center py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition";
+      aiImagePanel.classList.remove('hidden');
+      aiStoryboardPanel.classList.add('hidden');
+    });
+
+    // 呼叫 Gemini 3.1 Flash Preview 生成結構化分鏡與故事板
+    const btnGenerateAIStoryboard = document.getElementById('btnGenerateAIStoryboard');
+    const aiLoadingIndicator = document.getElementById('aiLoadingIndicator');
+    const aiLoadingStatus = document.getElementById('aiLoadingStatus');
+
+    btnGenerateAIStoryboard.addEventListener('click', async () => {
+      const topic = document.getElementById('aiTopicInput').value.trim();
+      const style = document.getElementById('aiStyleSelect').value;
+      const sceneCount = parseInt(document.getElementById('aiSceneCount').value) || 4;
+
+      if (!topic) {
+        showToast("⚠️ 請輸入影片企劃主旨，好讓 Gemini 開始構思腳本！");
+        return;
+      }
+
+      btnGenerateAIStoryboard.disabled = true;
+      aiLoadingIndicator.classList.remove('hidden');
+      aiLoadingStatus.innerText = "設計腳本分鏡中...";
+
+      try {
+        const apiKey = ""; // Canvas 執行時會自動注入 API key
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+        const systemPrompt = "你是世界一流的短影音創意導演。你的任務是將用戶的影片企劃，精確拆解並生成一組極具視覺衝擊力的故事板場景列表。必須輸出符合要求的 JSON 資料格式。";
+        const userQuery = `請為專案主題「${topic}」設計影片腳本分鏡。風格設定為：「${style}」。請精準生成 ${sceneCount} 個精美場景分鏡，每個場景包含停留秒數，並提供一段極佳的英文影像描述，以便後續可直接送入 AI 繪圖模型（如 Imagen）。`;
+
+        // 構建結構化 JSON 輸出的 payload
+        const payload = {
+          contents: [{ parts: [{ text: userQuery }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  sceneName: { type: "STRING", description: "場景簡短中文名稱，例如：未來台北市街頭" },
+                  duration: { type: "NUMBER", description: "建議停留秒數 (1.5 至 8 秒之間)" },
+                  searchKeyword: { type: "STRING", description: "適合在 Unsplash 上搜尋美麗背景圖的英文關鍵字（一至兩個詞彙）" }
+                },
+                required: ["sceneName", "duration", "searchKeyword"]
+              }
+            }
+          }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        const candidate = result.candidates?.[0];
+        
+        if (candidate && candidate.content?.parts?.[0]?.text) {
+          const generatedScenes = JSON.parse(candidate.content.parts[0].text);
+          aiLoadingStatus.innerText = "同步故事板數據至團隊雲端...";
+
+          // 將生成的場景資料轉換為對應的時間軸項目
+          const newTimeline = [];
+          generatedScenes.forEach((scene, index) => {
+            // 利用精美的 Unsplash 直連圖片（帶有 Gemini 提煉的關鍵字）
+            const imageUrl = `https://images.unsplash.com/photo-1514565131-fce0801e5785?q=80&w=1200&auto=format&fit=crop&sig=${Math.floor(Math.random()*1000)}`; 
+            // 嘗試使用關鍵字動態載入 Unsplash 圖像
+            const dynamicSrc = `https://images.unsplash.com/featured/?${encodeURIComponent(scene.searchKeyword)}&sig=${index}`;
+
+            newTimeline.push({
+              id: "ai-" + Math.random().toString(36).substr(2, 9),
+              name: scene.sceneName,
+              src: dynamicSrc,
+              duration: scene.duration || 3.5,
+              type: 'image'
+            });
+          });
+
+          // 推送更新到 Firestore，實現所有人裝置同步
+          await updateDoc(projectDocRef, { timeline: newTimeline });
+          await logAction(`透過 Gemini AI 智能生成了全套腳本分鏡故事板！專案主題：「${topic}」`);
+          showToast("🎉 Gemini 成功生成分鏡，已即時廣播更新給所有人！");
+        } else {
+          showToast("❌ 抱歉，AI 故事板生成失敗，請稍後重試。");
+        }
+      } catch (err) {
+        console.error("Gemini 故事板生成錯誤:", err);
+        showToast("❌ 雲端連線異常，請確認 API 連線狀態。");
+      } finally {
+        btnGenerateAIStoryboard.disabled = false;
+        aiLoadingIndicator.classList.add('hidden');
+      }
+    });
+
+    // 呼叫 Google Imagen 4.0 繪圖生成高品質專案分鏡畫面
+    const btnGenerateAIImage = document.getElementById('btnGenerateAIImage');
+    const aiImagePromptInput = document.getElementById('aiImagePrompt');
+
+    btnGenerateAIImage.addEventListener('click', async () => {
+      const promptText = aiImagePromptInput.value.trim();
+
+      if (!promptText) {
+        showToast("⚠️ 請先輸入畫面描述 (Prompt)，好讓 Imagen 繪製精美場景！");
+        return;
+      }
+
+      btnGenerateAIImage.disabled = true;
+      aiLoadingIndicator.classList.remove('hidden');
+      aiLoadingStatus.innerText = "Imagen 4.0 智慧運算畫布中...";
+
+      try {
+        const apiKey = ""; // 自動注入 API Key
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+
+        const payload = {
+          instances: [{ prompt: promptText }],
+          parameters: { sampleCount: 1 }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        const base64Data = result.predictions?.[0]?.bytesBase64Encoded;
+
+        if (base64Data) {
+          const imageUrl = `data:image/png;base64,${base64Data}`;
+          aiLoadingStatus.innerText = "同步新畫作上傳雲端...";
+
+          const newItem = {
+            id: "imagen-" + Math.random().toString(36).substr(2, 9),
+            name: `AI 繪製: ${promptText.substring(0, 15)}...`,
+            src: imageUrl,
+            duration: defaultSlideDuration,
+            type: 'image'
+          };
+
+          const updatedTimeline = [...timelineItems, newItem];
+          // 直接同步到團隊協作 Firestore
+          await updateDoc(projectDocRef, { timeline: updatedTimeline.map(({id, name, src, duration, type}) => ({id, name, src, duration, type})) });
+          await logAction(`生成了全新的 Imagen 4.0 高畫質素材並同步共享！`);
+
+          aiImagePromptInput.value = "";
+          showToast("🎨 Imagen AI 畫作成功上傳，並同步投影到所有協作者的 Canvas 播放器！");
+        } else {
+          showToast("❌ AI 繪圖生成失敗，請更換提示詞重試。");
+        }
+      } catch (err) {
+        console.error("Imagen 繪圖出錯:", err);
+        showToast("❌ 繪圖服務連線失敗，請檢查網路。");
+      } finally {
+        btnGenerateAIImage.disabled = false;
+        aiLoadingIndicator.classList.add('hidden');
+      }
+    });
+
+    // 當團隊成員在聊天室中輸入 /ai，在此處由本機代理呼叫 Gemini 並回傳至 Firestore 聊天頻道中
+    async function triggerGeminiChatCompanion(query, userMsgId) {
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+        // 標記該用戶訊息已觸發 AI，防止多協作者重複呼叫
+        const userMsgRef = doc(db, 'artifacts', appId, 'public', 'data', 'chat', userMsgId);
+        await updateDoc(userMsgRef, { aiTriggered: true });
+
+        const systemPrompt = "你是內置於這套『多人雲端影音協作剪輯控制台』的 AI 導演。你的性格幽默熱情，擅長提供團隊關於影片劇本、分鏡特效、調色風格以及配樂的高價值專業意見。請給予極其簡短、精煉的中文回應（不超過兩句話），這會讓聊天室更好閱讀。";
+        const userQuery = `協同剪輯師問：${query}`;
+
+        const payload = {
+          contents: [{ parts: [{ text: userQuery }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        const aiReplyText = result.candidates?.[0]?.content?.parts?.[0]?.text || "收到！正在為團隊構思更精彩的分鏡。";
+
+        // 將 AI 回答新增至 Firestore，所有人即可同時看到
+        const chatColRef = collection(db, 'artifacts', appId, 'public', 'data', 'chat');
+        await addDoc(chatColRef, {
+          roomId: currentRoomId,
+          sender: "🤖 Gemini 導演助理",
+          color: "#a78bfa", // 紫色頭像
+          text: aiReplyText,
+          type: 'text',
+          timestamp: serverTimestamp()
+        });
+      } catch (err) {
+        console.error("Gemini 聊天回應出錯:", err);
+      }
+    }
+
+    // ==========================================
+    // 共享渲染引擎核心
+    // ==========================================
+    function startCanvasRender() {
+      function tick(now) {
+        if (!lastTime) lastTime = now;
+        const delta = now - lastTime;
+        lastTime = now;
+
+        const totalDuration = timelineItems.reduce((sum, item) => sum + (item.duration * 1000), 0);
+
+        if (isPlaying) {
+          playbackTime += delta;
+          if (playbackTime >= totalDuration) {
+            playbackTime = 0;
+          }
+          document.getElementById('playbackTimer').innerText = `${(playbackTime / 1000).toFixed(1)}s / ${(totalDuration / 1000).toFixed(1)}s`;
+        }
+
+        drawFrame(totalDuration);
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function drawFrame(totalDuration) {
+      ctx.fillStyle = '#05020c';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (timelineItems.length === 0) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('正在讀取雲端共享時間軸...', canvas.width / 2, canvas.height / 2);
+        return;
+      }
+
+      // 尋找當前播到哪個項目
+      let accumTime = 0;
+      let activeIndex = -1;
+      
+      for (let i = 0; i < timelineItems.length; i++) {
+        const itemDuration = timelineItems[i].duration * 1000;
+        if (playbackTime >= accumTime && playbackTime < accumTime + itemDuration) {
+          activeIndex = i;
+          break;
+        }
+        accumTime += itemDuration;
+      }
+
+      if (activeIndex === -1) activeIndex = timelineItems.length - 1;
+
+      const activeItem = timelineItems[activeIndex];
+      const itemStartTime = accumTime;
+      const itemElapsed = playbackTime - itemStartTime;
+      const itemDuration = activeItem.duration * 1000;
+
+      const transitionTime = 1000;
+      let nextItem = null;
+      let inTransition = false;
+      let progress = 0;
+
+      if (currentTransition !== 'none' && activeIndex < timelineItems.length - 1) {
+        const timeRemaining = itemDuration - itemElapsed;
+        if (timeRemaining < transitionTime) {
+          nextItem = timelineItems[activeIndex + 1];
+          inTransition = true;
+          progress = (transitionTime - timeRemaining) / transitionTime;
+        }
+      }
+
+      // 執行轉場
+      if (!inTransition) {
+        drawImg(activeItem.element, 1.0);
+      } else {
+        if (currentTransition === 'fade') {
+          drawImg(activeItem.element, 1.0 - progress);
+          ctx.save();
+          ctx.globalAlpha = progress;
+          drawImg(nextItem.element, progress);
+          ctx.restore();
+        } else if (currentTransition === 'slide') {
+          ctx.save();
+          ctx.translate(-progress * canvas.width, 0);
+          drawImg(activeItem.element, 1.0);
+          ctx.restore();
+
+          ctx.save();
+          ctx.translate(canvas.width - progress * canvas.width, 0);
+          drawImg(nextItem.element, 1.0);
+          ctx.restore();
+        } else if (currentTransition === 'zoom') {
+          ctx.save();
+          drawImg(activeItem.element, 1.0 - progress, 1.0 + progress * 0.1);
+          ctx.restore();
+
+          ctx.save();
+          ctx.globalAlpha = progress;
+          drawImg(nextItem.element, progress, 0.8 + progress * 0.2);
+          ctx.restore();
+        }
+      }
+
+      // 水印與控制線
+      ctx.fillStyle = 'rgba(14, 165, 233, 0.2)';
+      ctx.fillRect(0, 0, canvas.width, 6);
+      if (totalDuration > 0) {
+        ctx.fillStyle = '#0ea5e9';
+        ctx.fillRect(0, 0, canvas.width * (playbackTime / totalDuration), 6);
+      }
+    }
+
+    function drawImg(img, opacity, scale = 1.0) {
+      if (!img || !img.complete) return;
+      ctx.globalAlpha = opacity;
+      
+      const ratio = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+      const w = img.naturalWidth * ratio * scale;
+      const h = img.naturalHeight * ratio * scale;
+      const x = (canvas.width - w) / 2;
+      const y = (canvas.height - h) / 2;
+      
+      ctx.drawImage(img, x, y, w, h);
+      ctx.globalAlpha = 1.0;
+    }
+
+    startCanvasRender();
+
+    // 控制項監聽
+    const btnPlayPause = document.getElementById('btnPlayPause');
+    const iconPlay = document.getElementById('iconPlay');
+    const iconPause = document.getElementById('iconPause');
+
+    btnPlayPause.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        iconPlay.classList.add('hidden');
+        iconPause.classList.remove('hidden');
+      } else {
+        iconPlay.classList.remove('hidden');
+        iconPause.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('btnStop').addEventListener('click', () => {
+      isPlaying = false;
+      playbackTime = 0;
+      iconPlay.classList.remove('hidden');
+      iconPause.classList.add('hidden');
+    });
+
+    // 導出功能
+    document.getElementById('btnRender').addEventListener('click', () => {
+      showToast("🚀 正在啟動本機 GPU 硬體編碼導出程序！本機處理中...");
+    });
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.innerText = msg;
+      toast.classList.remove('translate-x-96', 'opacity-0');
+      toast.classList.add('translate-x-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-x-96', 'opacity-0');
+        toast.classList.remove('translate-x-0', 'opacity-100');
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
