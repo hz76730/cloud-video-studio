@@ -147,7 +147,7 @@ const firebaseConfig = {
         <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
           <h3 class="text-md font-bold text-white flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
             匯入專屬雲端素材
           </h3>
@@ -359,10 +359,21 @@ const firebaseConfig = {
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 1. 環境檢測：是否配置了真實的 Firebase 金鑰 (檢查 localStorage 是否有手動貼入的真實金鑰)
+    // 1. 環境檢測：是否配置了真實的 Firebase 金鑰 (檢查 URL Hash 與 localStorage)
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'collaborative-video-app';
     
-    // 安全地取得並解析自訂金鑰 (宣告提升，修復 ReferenceError)
+    // 💡 穿透解決方案：優先自 URL Hash 中讀取自訂金鑰 (確保在 iframe 沙盒中重新整理後依然生效)
+    let hashConfig = null;
+    try {
+      if (window.location.hash && window.location.hash.startsWith('#cfg=')) {
+        const base64Data = window.location.hash.substring(5); // 扣掉 '#cfg=' 共 5 碼
+        hashConfig = JSON.parse(decodeURIComponent(escape(atob(base64Data))));
+      }
+    } catch(e) {
+      console.error("無法自 URL Hash 解析金鑰:", e);
+    }
+
+    // 安全地取得並解析自訂本地金鑰 (宣告提升，修復 ReferenceError)
     let parsedUserConfig = null;
     let storedUserConfig = null;
     try {
@@ -374,10 +385,12 @@ const firebaseConfig = {
       console.error("無法安全地讀取與解析自訂 Firebase Config:", e);
     }
 
-    const isMockConfig = (typeof __firebase_config === 'undefined' || !JSON.parse(__firebase_config).apiKey) && !parsedUserConfig;
+    // 優先選取 URL Hash 中的金鑰，其次才為 localStorage
+    const finalUserConfig = hashConfig || parsedUserConfig;
+    const isMockConfig = (typeof __firebase_config === 'undefined' || !JSON.parse(__firebase_config).apiKey) && !finalUserConfig;
     
-    // 初始化 Firebase 設定（如果是手動設定則優先使用，若都沒有才自動啟用本地模擬協作模式）
-    const firebaseConfig = parsedUserConfig || (!isMockConfig ? JSON.parse(__firebase_config) : {
+    // 初始化 Firebase 設定（優先使用用戶覆蓋的雲端金鑰，否則使用預設模擬模式）
+    const firebaseConfig = finalUserConfig || (!isMockConfig ? JSON.parse(__firebase_config) : {
       apiKey: "MOCK_KEY",
       authDomain: "mock.firebaseapp.com",
       projectId: "mock-project",
@@ -491,7 +504,7 @@ const firebaseConfig = {
       const statusText = document.getElementById('connectionStatusText');
       
       // 如果是用戶手動配置了金鑰卻連線失敗，則顯示紅色警示診斷燈
-      if (parsedUserConfig && firebaseInitError) {
+      if (finalUserConfig && firebaseInitError) {
         statusIndicator.className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse cursor-pointer";
         statusText.innerText = "⚠️ 雲端連線錯誤 (點擊排查)";
         statusText.className = "text-xs text-rose-400 font-bold cursor-pointer underline decoration-dotted";
@@ -573,7 +586,7 @@ const firebaseConfig = {
         overlay.classList.add('opacity-0', 'pointer-events-none');
         setTimeout(() => {
           overlay.classList.add('hidden'); // 確保點擊可以穿透
-          if (parsedUserConfig && firebaseInitError) {
+          if (finalUserConfig && firebaseInitError) {
             showToast("⚠️ Firebase 雲端初始化受阻，已為您展開故障診斷。");
             showFirebaseErrorDialog(firebaseInitError);
           } else {
@@ -1034,12 +1047,13 @@ const firebaseConfig = {
     const btnClearConfig = document.getElementById('btnClearConfig');
     const firebaseConfigInput = document.getElementById('firebaseConfigInput');
 
-    // 如果 localStorage 內已存有設定，自動填入輸入框中
-    if (storedUserConfig) {
+    // 優先選取並填入儲存的設定（支援從 URL Hash 還原顯示）
+    const configToDisplay = hashConfig || parsedUserConfig;
+    if (configToDisplay) {
       try {
-        firebaseConfigInput.value = JSON.stringify(JSON.parse(storedUserConfig), null, 2);
+        firebaseConfigInput.value = JSON.stringify(configToDisplay, null, 2);
       } catch (e) {
-        firebaseConfigInput.value = storedUserConfig;
+        firebaseConfigInput.value = JSON.stringify(configToDisplay);
       }
     }
 
@@ -1064,7 +1078,7 @@ const firebaseConfig = {
     btnCancelConfig.addEventListener('click', closeConfigModal);
     btnCancelConfigX.addEventListener('click', closeConfigModal);
 
-    // 儲存金鑰（已整合：防呆與萬能解析機制，阻擋點選沒反應之 Bug）
+    // 儲存金鑰（雙軌制：同時寫入 URL Hash 與 LocalStorage，完美擊破 iframe 沙盒限制）
     btnSaveConfig.addEventListener('click', () => {
       const inputVal = firebaseConfigInput.value.trim();
       if (!inputVal) {
@@ -1073,25 +1087,33 @@ const firebaseConfig = {
       }
 
       try {
-        // 使用我們的超級智慧解析器過濾出乾淨的 Config
+        // 1. 使用 Lax Parser 智慧過濾出乾淨的 Config
         const cleanedConfig = parseLaxFirebaseConfig(inputVal);
+        const configStr = JSON.stringify(cleanedConfig);
         
-        // 嘗試寫入 LocalStorage (並加上防崩潰保護，以防特殊隱私模式或沙盒限制)
+        // 2. 嘗試寫入 LocalStorage (附防崩潰機制)
         try {
-          localStorage.setItem('user_firebase_config', JSON.stringify(cleanedConfig));
+          localStorage.setItem('user_firebase_config', configStr);
         } catch (storageError) {
-          console.error("寫入 localStorage 受阻：", storageError);
-          alert("系統成功解析了金鑰，但您的瀏覽器（可能在無痕模式或限制 iframe 中）不允許讀寫本機儲存空間，金鑰重啟後將無法保存。");
+          console.warn("本機 localStorage 寫入受阻（通常為沙盒限制），改以 URL Hash 作為主儲存通道:", storageError);
+        }
+
+        // 3. 核心穿透技術：將金鑰序列化並寫入網址 Hash 欄位
+        try {
+          const b64 = btoa(unescape(encodeURIComponent(configStr)));
+          window.location.hash = 'cfg=' + b64;
+        } catch (hashError) {
+          console.error("寫入 URL Hash 失敗:", hashError);
         }
 
         showToast("✅ Firebase 雲端金鑰儲存成功！正在重載並切換為實時雲端連線模式...");
         
+        // 帶有 Hash 的安全刷新，這會強制繞過 iframe 限制
         setTimeout(() => {
           window.location.reload();
         }, 1500);
 
       } catch (parseError) {
-        // 直接清楚地把解析失敗的原因印給使用者，杜絕沒反應、黑盒子的現象！
         console.error("解析失敗：", parseError);
         showToast(`❌ 金鑰解析失敗：${parseError.message || "語法不正確"}`);
       }
@@ -1102,6 +1124,9 @@ const firebaseConfig = {
       try {
         localStorage.removeItem('user_firebase_config');
       } catch (e) {}
+      try {
+        window.location.hash = '';
+      } catch(e) {}
       showToast("🗑️ 已清除自訂金鑰！正在重啟並還原為本地沙盒模式...");
       setTimeout(() => {
         window.location.reload();
