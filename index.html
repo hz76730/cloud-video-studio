@@ -347,10 +347,11 @@ const firebaseConfig = {
     // 1. 環境檢測：是否配置了真實的 Firebase 金鑰 (檢查 localStorage 是否有手動貼入的真實金鑰)
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'collaborative-video-app';
     
-    // 安全地取得並解析自訂金鑰
+    // 安全地取得並解析自訂金鑰 (宣告提升，修復 ReferenceError)
     let parsedUserConfig = null;
+    let storedUserConfig = null;
     try {
-      const storedUserConfig = localStorage.getItem('user_firebase_config');
+      storedUserConfig = localStorage.getItem('user_firebase_config');
       if (storedUserConfig) {
         parsedUserConfig = JSON.parse(storedUserConfig);
       }
