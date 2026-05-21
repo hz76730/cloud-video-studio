@@ -79,7 +79,7 @@
         <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
           <h3 class="text-md font-bold text-white flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 00-5.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
             ⚙️ 配置真實 Firebase 雲端資料庫
           </h3>
@@ -107,35 +107,25 @@
 
         <div class="space-y-4">
           <p class="text-xs text-slate-300 leading-relaxed">
-            目前您的平台運作在 <span class="text-amber-400 font-bold">「本地模擬協作模式」</span>。此模式下，系統使用瀏覽器內部通道同步。這表示<strong>只有在同一台電腦的多個分頁</strong>能同步，<strong>跨裝置（如手機和電腦）是無法通訊的</strong>。
-          </p>
-          <p class="text-xs text-emerald-400 leading-relaxed font-semibold">
-            欲啟用真正的跨裝置（手機 ↔ 電腦）實時協作與聊天，請直接貼上您從 Firebase 複製的網頁配置程式碼：
+            系統已為您直接內嵌 <span class="text-emerald-400 font-bold">「專屬 Firebase 實時雲端」</span>！不論使用手機、無痕模式或跨裝置，均為免手動設定即時同步。
           </p>
           <div>
-            <label class="block text-xs text-slate-400 font-bold mb-1.5 uppercase">Firebase Config (支援直接貼上程式碼或 JSON)</label>
-            <textarea id="firebaseConfigInput" rows="6" placeholder='可直接貼上整段程式碼，例如：
-const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "your-app.firebaseapp.com",
-  projectId: "your-app",
-  ...
-};' class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-brand-500 font-mono"></textarea>
+            <label class="block text-xs text-slate-400 font-bold mb-1.5 uppercase">目前的 Firebase Config (已嵌入為系統預設值)</label>
+            <textarea id="firebaseConfigInput" rows="6" placeholder="已直接嵌入您專屬的雲端金鑰，免輸入即可即時雲端同步。" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:border-brand-500 font-mono"></textarea>
           </div>
           <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-[11px] text-slate-400 space-y-1">
             <span class="font-bold text-slate-300 flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span> 簡單 3 步取得免費雲端金鑰：
+              <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span> 關於內置雲端架構：
             </span>
-            <div>1. 前往並登入 <a href="https://console.firebase.google.com/" target="_blank" class="text-brand-400 underline hover:text-brand-300">Firebase Console</a>，建立一個免費專案。</div>
-            <div>2. 點擊進入專案，並啟用 <strong>Firestore Database</strong> 與 <strong>Authentication (啟用匿名登入驗證 Anonymous)</strong>。</div>
-            <div>3. 在專案設定首頁，新增一個「Web 應用程式」，即可複製 `firebaseConfig` 程式碼貼到上方。</div>
+            <div>目前專案直接連線至您建立的 <strong>cloud-video-3e3d3</strong> 免費專案。</div>
+            <div>若未來需要切換成其他的專案資料庫，可以直接在上方框內貼上新的配置程式碼並儲存。</div>
           </div>
         </div>
         <div class="flex justify-between items-center mt-6 pt-3 border-t border-slate-800">
-          <button id="btnClearConfig" class="px-3 py-2 text-xs font-semibold text-rose-400 hover:text-rose-300 transition">清除自訂金鑰</button>
+          <button id="btnClearConfig" class="px-3 py-2 text-xs font-semibold text-rose-400 hover:text-rose-300 transition">清除自訂金鑰 (還原為內建設定)</button>
           <div class="flex space-x-2">
             <button id="btnCancelConfig" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition">取消</button>
-            <button id="btnSaveConfig" class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white transition shadow-lg">儲存並重啟</button>
+            <button id="btnSaveConfig" class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white transition shadow-lg">變更自訂並重啟</button>
           </div>
         </div>
       </div>
@@ -147,7 +137,7 @@ const firebaseConfig = {
         <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
           <h3 class="text-md font-bold text-white flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
             匯入專屬雲端素材
           </h3>
@@ -206,10 +196,10 @@ const firebaseConfig = {
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
-      <!-- 左欄：專案設定與即時通訊 (5 cols) -->
+      <!-- 左欄：專案設定、Gemini AI 與即時通訊 (5 cols) -->
       <div class="lg:col-span-5 space-y-6">
         
-        <!-- 雲端設定 -->
+        <!-- 專案設定 -->
         <section class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
           <h2 class="text-sm font-bold text-slate-200 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -239,6 +229,75 @@ const firebaseConfig = {
                 <input type="number" id="syncSlideDuration" value="3.5" min="1" max="10" step="0.5" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- 🚀 Gemini AI 智慧工具箱 -->
+        <section class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <h2 class="text-sm font-bold text-slate-200 flex items-center">
+              <!-- Gemini Logo Style SVG -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 mr-1.5 text-brand-500 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2c-.3 0-.5.2-.6.4l-2.4 6c-.1.2-.2.3-.4.4l-6 2.4c-.3.1-.4.3-.4.6s.2.5.4.6l6 2.4c.2.1.3.2.4.4l2.4 6c.1.2.3.4.6.4s.5-.2.6-.4l2.4-6c.1-.2.2-.3.4-.4l6-2.4c.2-.1.4-.3.4-.6s-.2-.5-.4-.6l-6-2.4c-.2-.1-.3-.2-.4-.4l-2.4-6c-.1-.2-.3-.4-.6-.4zm5 1a.5.5 0 00-.5.5l-.8 2c-.1.1-.1.2-.2.2l-2 .8a.5.5 0 000 1l2 .8c.1.1.1.2.2.2l.8 2a.5.5 0 001 0l.8-2c.1-.1.1-.2.2-.2l2-.8a.5.5 0 000-1l-2-.8c-.1-.1-.1-.2-.2-.2l-.8-2a.5.5 0 00-.5-.5z" />
+              </svg>
+              Gemini AI 智慧工具箱
+            </h2>
+            <span class="text-[10px] bg-brand-500/10 text-brand-400 px-2 py-0.5 rounded border border-brand-500/20 font-mono">Google APIs</span>
+          </div>
+
+          <!-- 標籤頁切換鈕 -->
+          <div class="flex space-x-1 p-1 bg-slate-950 rounded-xl border border-slate-800">
+            <button id="tabStoryboardBtn" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-900 text-brand-400 border border-slate-800/80 transition-all">AI 企劃故事板</button>
+            <button id="tabImagenBtn" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all">AI Imagen 繪圖</button>
+          </div>
+
+          <!-- Tab Content 1: AI Storyboard -->
+          <div id="tabStoryboardContent" class="space-y-3.5">
+            <div>
+              <label class="block text-[10px] text-slate-400 font-bold mb-1.5 uppercase">影片企劃主旨</label>
+              <textarea id="aiProjectSubject" rows="2" placeholder="例如：2026年未來智慧城市宣傳影片，著重在綠色生態與高科技結合" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-brand-500 font-sans resize-none"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] text-slate-400 font-bold mb-1">視覺風格</label>
+                <select id="aiVisualStyle" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                  <option value="Cyberpunk">賽博龐克 (Cyberpunk)</option>
+                  <option value="Anime">日系動漫 (Anime)</option>
+                  <option value="Cinematic">寫實電影 (Cinematic)</option>
+                  <option value="Ink Painting">水墨國風 (Ink Painting)</option>
+                  <option value="3D Cartoon">3D 雙陸卡通 (3D Cartoon)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 font-bold mb-1">分鏡場景數</label>
+                <select id="aiSceneCount" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                  <option value="3">3 個分鏡</option>
+                  <option value="4" selected>4 個分鏡</option>
+                  <option value="5">5 個分鏡</option>
+                  <option value="6">6 個分鏡</option>
+                </select>
+              </div>
+            </div>
+            <button id="btnGenerateStoryboard" class="w-full py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center space-x-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 9.172V5L8 4z" />
+              </svg>
+              <span>一鍵生成 AI 故事板分鏡</span>
+            </button>
+          </div>
+
+          <!-- Tab Content 2: AI Imagen -->
+          <div id="tabImagenContent" class="space-y-3.5 hidden">
+            <div>
+              <label class="block text-[10px] text-slate-400 font-bold mb-1.5 uppercase">繪圖描述 (Prompt)</label>
+              <textarea id="aiImagePrompt" rows="3" placeholder="輸入您想要繪製的場景細節描述，例如：未來主義的空中都市，巨大的太空輕軌在霓虹閃爍的摩天大樓間穿梭，8K超高畫質..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-brand-500 font-sans resize-none"></textarea>
+            </div>
+            <button id="btnGenerateImage" class="w-full py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg flex items-center justify-center space-x-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>一鍵生成 AI 繪圖</span>
+            </button>
           </div>
         </section>
 
@@ -281,7 +340,7 @@ const firebaseConfig = {
           <div class="relative w-full aspect-video bg-black">
             <canvas id="cloudCanvas" width="1280" height="720" class="w-full h-full object-contain bg-black"></canvas>
             
-            <!-- 載入中遮罩層 -->
+            <!-- 載入中與 AI 進度遮罩層 -->
             <div id="loadingOverlay" class="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center space-y-3 transition-all duration-500 z-40">
               <div class="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
               <p class="text-xs text-slate-300 font-bold tracking-wide" id="loadingText">正在建立安全連線通道...</p>
@@ -373,7 +432,7 @@ const firebaseConfig = {
       console.error("無法自 URL Hash 解析金鑰:", e);
     }
 
-    // 安全地取得並解析自訂本地金鑰 (宣告提升，修復 ReferenceError)
+    // 安全地取得並解析自訂本地金鑰
     let parsedUserConfig = null;
     let storedUserConfig = null;
     try {
@@ -385,22 +444,36 @@ const firebaseConfig = {
       console.error("無法安全地讀取與解析自訂 Firebase Config:", e);
     }
 
-    // 優先選取 URL Hash 中的金鑰，其次才為 localStorage
+    // 優先選取 URL Hash 中的金鑰，其次為 localStorage
     const finalUserConfig = hashConfig || parsedUserConfig;
-    const isMockConfig = (typeof __firebase_config === 'undefined' || !JSON.parse(__firebase_config).apiKey) && !finalUserConfig;
     
-    // 初始化 Firebase 設定（優先使用用戶覆蓋的雲端金鑰，否則使用預設模擬模式）
-    const firebaseConfig = finalUserConfig || (!isMockConfig ? JSON.parse(__firebase_config) : {
-      apiKey: "MOCK_KEY",
-      authDomain: "mock.firebaseapp.com",
-      projectId: "mock-project",
-      storageBucket: "mock.appspot.com",
-      messagingSenderId: "12345",
-      appId: "1:123:web:abc"
-    });
+    // 🌟 核心升級：直接將您的真實 Firebase Config 烘焙為「預設 fallback」！
+    // 這樣在 Github Pages、手機、無痕模式免貼任何代碼，就能直接享受雲端協作！
+    const defaultFirebaseConfig = {
+      apiKey: "AIzaSyCf1TUGsvRGIas9YLcr8pdyNB9t9RsXjoc",
+      authDomain: "cloud-video-3e3d3.firebaseapp.com",
+      projectId: "cloud-video-3e3d3",
+      storageBucket: "cloud-video-3e3d3.firebasestorage.app",
+      messagingSenderId: "332845943458",
+      appId: "1:332845943458:web:fa17cc1d2187cd7d3a25fb"
+    };
 
-    let app, auth, db;
-    let isOfflineMode = isMockConfig; // 標記是否為本地沙盒模式
+    // 1. 當在我們的 Workspace Preview 平台時，使用環境變數 __firebase_config
+    // 2. 當在 GitHub Pages 時，使用 finalUserConfig (使用者透過 URL Hash 覆蓋) 或 defaultFirebaseConfig (烘焙的預設值)
+    let envConfig = null;
+    if (typeof __firebase_config !== 'undefined') {
+      try {
+        const parsedEnv = JSON.parse(__firebase_config);
+        if (parsedEnv && parsedEnv.apiKey && parsedEnv.apiKey !== "MOCK_KEY") {
+          envConfig = parsedEnv;
+        }
+      } catch(e) {}
+    }
+
+    const firebaseConfig = envConfig || finalUserConfig || defaultFirebaseConfig;
+    
+    // 如果連預設金鑰都沒有，或預設金鑰是 MockKey，才跑 Local Mock
+    let isOfflineMode = !firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "MOCK_KEY";
     let firebaseInitError = null; // 儲存 Firebase 初始化失敗的錯誤內容
 
     // 隨機創作者資訊
@@ -487,7 +560,7 @@ const firebaseConfig = {
             }
           });
         } catch (e) {
-          console.error("Firebase 雲端初始化失敗，自動切換至本地沙盒:", e);
+          console.error("Firebase 雲端連線異常，正在退回本地沙盒：", e);
           firebaseInitError = e; // 記錄錯誤物件以利診斷
           isOfflineMode = true;
           setupOfflineSandbox();
@@ -596,6 +669,19 @@ const firebaseConfig = {
       }
     }
 
+    // 顯示、隱藏進度條 (給 AI 生成時當進度狀態看板)
+    function showProgressOverlay(title, subtitle) {
+      const overlay = document.getElementById('loadingOverlay');
+      document.getElementById('loadingText').innerText = title;
+      document.getElementById('loadingSubtext').innerText = subtitle;
+      overlay.classList.remove('hidden', 'pointer-events-none', 'opacity-0');
+      overlay.classList.add('opacity-100');
+    }
+
+    function hideProgressOverlay() {
+      hideLoadingOverlay();
+    }
+
     // 5. 加入專案協作房間 (雲端實體)
     async function joinRoom(roomId) {
       if (!currentUser || isOfflineMode) return;
@@ -613,67 +699,81 @@ const firebaseConfig = {
       // Rule 1: Path Must Be Strict
       projectDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', roomId);
       
-      const snap = await getDoc(projectDocRef);
-      if (!snap.exists()) {
-        await setDoc(projectDocRef, localDb.project);
-      }
-
-      // 回報自己在線
-      const myMemberRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', currentUser.uid);
-      await setDoc(myMemberRef, {
-        roomId: roomId,
-        name: randomNickname,
-        color: memberColor,
-        lastActive: serverTimestamp()
-      });
-
-      // 監聽專案與時間軸
-      unsubscribeProject = onSnapshot(projectDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          document.getElementById('syncProjectTitle').value = data.title;
-          document.getElementById('syncTransition').value = data.globalTransition;
-          document.getElementById('syncSlideDuration').value = data.slideDuration;
-          currentTransition = data.globalTransition;
-          defaultSlideDuration = data.slideDuration;
-          loadTimelineFromSync(data.timeline);
+      try {
+        const snap = await getDoc(projectDocRef);
+        if (!snap.exists()) {
+          await setDoc(projectDocRef, localDb.project);
         }
-      }, (err) => console.error("專案監聽錯誤：", err));
 
-      // 監聽聊天
-      const chatColRef = collection(db, 'artifacts', appId, 'public', 'data', 'chat');
-      unsubscribeChat = onSnapshot(chatColRef, (colSnap) => {
-        const messages = [];
-        colSnap.forEach(d => {
-          const m = d.data();
-          if (m.roomId === roomId) {
-            messages.push({ id: d.id, ...m });
-          }
+        // 回報自己在線
+        const myMemberRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', currentUser.uid);
+        await setDoc(myMemberRef, {
+          roomId: roomId,
+          name: randomNickname,
+          color: memberColor,
+          lastActive: serverTimestamp()
         });
-        messages.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
-        renderChat(messages);
-      }, (err) => console.error("聊天監聽錯誤：", err));
 
-      // 監聽在線成員
-      const membersColRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
-      unsubscribeMembers = onSnapshot(membersColRef, (colSnap) => {
-        const members = [];
-        colSnap.forEach(d => {
-          const mem = d.data();
-          if (mem.roomId === roomId) {
-            members.push(mem);
+        // 監聽專案與時間軸
+        unsubscribeProject = onSnapshot(projectDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            document.getElementById('syncProjectTitle').value = data.title;
+            document.getElementById('syncTransition').value = data.globalTransition;
+            document.getElementById('syncSlideDuration').value = data.slideDuration;
+            currentTransition = data.globalTransition;
+            defaultSlideDuration = data.slideDuration;
+            loadTimelineFromSync(data.timeline);
           }
-        });
-        renderMembers(members);
-      }, (err) => console.error("成員監聽錯誤：", err));
+        }, (err) => console.error("專案監聽錯誤：", err));
 
-      hideLoadingOverlay();
+        // 監聽聊天
+        const chatColRef = collection(db, 'artifacts', appId, 'public', 'data', 'chat');
+        unsubscribeChat = onSnapshot(chatColRef, (colSnap) => {
+          const messages = [];
+          colSnap.forEach(d => {
+            const m = d.data();
+            if (m.roomId === roomId) {
+              messages.push({ id: d.id, ...m });
+            }
+          });
+          messages.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+          renderChat(messages);
+        }, (err) => console.error("聊天監聽錯誤：", err));
+
+        // 監聽在線成員
+        const membersColRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
+        unsubscribeMembers = onSnapshot(membersColRef, (colSnap) => {
+          const members = [];
+          colSnap.forEach(d => {
+            const mem = d.data();
+            if (mem.roomId === roomId) {
+              members.push(mem);
+            }
+          });
+          renderMembers(members);
+        }, (err) => console.error("成員監聽錯誤：", err));
+
+        hideLoadingOverlay();
+      } catch (err) {
+        console.error("Firestore 加入專案失敗：", err);
+        firebaseInitError = err;
+        isOfflineMode = true;
+        setupOfflineSandbox();
+      }
     }
 
     // 數據變更寫入引擎（自適應雲端與本地）
     async function updateProjectData(updatedFields) {
-      if (!isOfflineMode && projectDocRef) {
-        await updateDoc(projectDocRef, updatedFields);
+      if (!isOfflineMode && projectDocRef && currentUser) {
+        try {
+          await updateDoc(projectDocRef, updatedFields);
+        } catch (e) {
+          console.error("寫入雲端失敗，自動降級本地保護：", e);
+          firebaseInitError = e;
+          isOfflineMode = true;
+          setupOfflineSandbox();
+        }
       } else {
         // 本地模式：更新 LocalDb 並廣播
         localDb.project = { ...localDb.project, ...updatedFields };
@@ -708,9 +808,13 @@ const firebaseConfig = {
         timestamp: { seconds: timestampSec }
       };
 
-      if (!isOfflineMode) {
-        const chatColRef = collection(db, 'artifacts', appId, 'public', 'data', 'chat');
-        await addDoc(chatColRef, { ...messageObj, timestamp: serverTimestamp() });
+      if (!isOfflineMode && currentUser) {
+        try {
+          const chatColRef = collection(db, 'artifacts', appId, 'public', 'data', 'chat');
+          await addDoc(chatColRef, { ...messageObj, timestamp: serverTimestamp() });
+        } catch (e) {
+          console.warn("發送聊天雲端受阻，切為本地：", e);
+        }
       } else {
         localDb.chat.push(messageObj);
         renderChat(localDb.chat);
@@ -953,7 +1057,6 @@ const firebaseConfig = {
       const fields = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId", "measurementId"];
       
       fields.forEach(field => {
-        // 匹配格式例如 apiKey: "AIza...", "apiKey": 'AIza...', 'apiKey': `AIza...` 等
         const regex = new RegExp(`['"]?${field}['"]?\\s*:\\s*['"\`]([^'"\`]+)['"\`]`, "i");
         const match = cleanedText.match(regex);
         if (match && match[1]) {
@@ -982,39 +1085,41 @@ const firebaseConfig = {
       
       let solution = "";
 
-      // 針對最常見的 Firebase 後台未設定進行情境引導：
-      if (errStr.includes('auth/operation-not-allowed') || errStr.includes('anonymous') || errStr.includes('auth/admin-restricted-operation')) {
+      // 針對最常見的 Firebase 後台未設定進行情境引導 (包含針對 auth/operation-not-allowed 與 permission-denied 進行匹配)：
+      if (errStr.includes('auth/operation-not-allowed') || errStr.includes('configuration-not-allowed') || errStr.includes('anonymous') || errStr.includes('auth/admin-restricted-operation')) {
         solution = `
           <div class="space-y-2">
             <p class="font-bold text-emerald-400">💡 診斷結果：您忘記開啟 Firebase 的『匿名驗證』服務了！</p>
             <p class="text-[11px] text-slate-300">本系統採用安全的匿名憑證來防止髒資料。請立即照以下方式開啟：</p>
             <ol class="list-decimal pl-4 space-y-1 text-slate-400 text-[11px]">
               <li>進入您的 <a href="https://console.firebase.google.com/" target="_blank" class="text-brand-400 underline hover:text-brand-300">Firebase 控制台</a>。</li>
-              <li>點擊左側選單的 <b>Build ➔ Authentication</b>，並點擊 <b>Get Started</b> 啟用驗證功能。</li>
-              <li>在頂部的標籤頁選擇 <b>Sign-in method</b>（登入方式）。</li>
-              <li>點擊下方 <b>Anonymous (匿名)</b> 選項，將其改為 <b>Enable (啟用)</b> 並儲存。</li>
+              <li>點擊左側選單的 <b>安全性 ➔ Authentication</b> (或身分驗證)，並點擊 <b>開始使用</b> 啟用驗證功能。</li>
+              <li>在頂部的標籤頁選擇 <b>Sign-in method</b>（登入方法）。</li>
+              <li>在下方點選 <b>Anonymous (匿名)</b> 選項，將其改為 <b>啟用 (Enable)</b> 並儲存。</li>
               <li>重整網頁，您的手機和電腦就會立刻自動同步連通！</li>
             </ol>
           </div>
         `;
-      } else if (errStr.includes('permission-denied') || errStr.includes('rules') || errStr.includes('Firestore')) {
+      } else if (errStr.includes('permission-denied') || errStr.includes('rules') || errStr.includes('permissions') || errStr.includes('Firestore')) {
         solution = `
           <div class="space-y-2">
-            <p class="font-bold text-emerald-400">💡 診斷結果：您的 Firestore Database 資料庫尚未建立或安全規則阻擋了寫入！</p>
-            <p class="text-[11px] text-slate-300">請前往後台將資料庫調整為允許讀寫：</p>
-            <ol class="list-decimal pl-4 space-y-1 text-slate-400 text-[11px]">
-              <li>進入您的 Firebase 控制台，點擊左側 <b>Build ➔ Firestore Database</b>。</li>
-              <li>點選 <b>Create database</b>（建立資料庫），並選擇一個與您最近的地區（如亞洲-東亞）。</li>
-              <li>在安全規則步驟中，請選擇 <b>Start in test mode</b>（以測試模式啟動），或到 <b>Rules</b> 標籤頁將安全規則修改為允許讀寫：<br>
-              <code class="block bg-slate-950 p-1 rounded text-amber-300 text-[10px] mt-1">allow read, write: if true;</code></li>
-              <li>完成後重新整網頁即可！</li>
-            </ol>
+            <p class="font-bold text-emerald-400">💡 診斷結果：您的 Firestore Database 安全規則阻擋了讀寫存取！</p>
+            <p class="text-[11px] text-slate-300">請立即將下列安全規則代碼複製並替換到您的 Firebase 後台：</p>
+            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-[10px] font-mono text-amber-300 break-all select-all select-text cursor-pointer" title="點擊全選複製" onclick="document.execCommand('copy')">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</div>
+            <p class="text-[10.5px] text-slate-400 mt-1">※ 設定步驟：進入控制台的 <b>資料庫和儲存空間 ➔ Firestore Database</b> ➔ 點選頂部 <b>Rules (規則)</b> 標籤頁 ➔ 貼上上方規則並點擊 <b>Publish (發布)</b>，重整網頁即完成！</p>
           </div>
         `;
       } else {
         solution = `
           <div class="space-y-2">
-            <p class="font-bold text-amber-400">💡 診斷結果：Firebase 金鑰參數解析正常，但無法與伺服器建立握手連線。</p>
+            <p class="font-bold text-amber-400">💡 診斷結果：Firebase 金鑰參數解析正常，但無法與伺服器建立連線。</p>
             <p class="text-[11px] text-slate-300">請嘗試以下排除法：</p>
             <ul class="list-disc pl-4 space-y-1 text-slate-400 text-[11px]">
               <li>檢查您的金鑰是否複製完整（大括號內有無缺少引號、逗號）。</li>
@@ -1047,8 +1152,8 @@ const firebaseConfig = {
     const btnClearConfig = document.getElementById('btnClearConfig');
     const firebaseConfigInput = document.getElementById('firebaseConfigInput');
 
-    // 優先選取並填入儲存的設定（支援從 URL Hash 還原顯示）
-    const configToDisplay = hashConfig || parsedUserConfig;
+    // 優先選取並填入儲存的設定（支援從 URL Hash 還原顯示，否則預設直接填入烘焙金鑰，讓設定面板有內容可見）
+    const configToDisplay = hashConfig || parsedUserConfig || defaultFirebaseConfig;
     if (configToDisplay) {
       try {
         firebaseConfigInput.value = JSON.stringify(configToDisplay, null, 2);
@@ -1119,7 +1224,7 @@ const firebaseConfig = {
       }
     });
 
-    // 清除金鑰並還原
+    // 清除金鑰並還原為烘焙的 defaultFirebaseConfig
     btnClearConfig.addEventListener('click', () => {
       try {
         localStorage.removeItem('user_firebase_config');
@@ -1127,7 +1232,7 @@ const firebaseConfig = {
       try {
         window.location.hash = '';
       } catch(e) {}
-      showToast("🗑️ 已清除自訂金鑰！正在重啟並還原為本地沙盒模式...");
+      showToast("🗑️ 已清除自訂覆蓋，還原為系統內建雲端金鑰！正在重啟中...");
       setTimeout(() => {
         window.location.reload();
       }, 1500);
@@ -1167,6 +1272,206 @@ const firebaseConfig = {
       document.getElementById('chatInput').value = '';
     });
 
+
+    // ==========================================
+    // 🤖 GEMINI AI 核心對接模組 (LLM & Imagen Integration)
+    // ==========================================
+    const apiKey = ""; // 執行環境會在執行時安全代入，請勿修改
+
+    // 帶有指數退避重試的萬能 Fetch 模組
+    async function fetchWithRetry(url, options, retries = 5, delay = 1000) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const res = await fetch(url, options);
+          if (res.ok) return await res.json();
+          if (res.status === 429 || res.status >= 500) {
+            // 需要指數退避重試
+          } else {
+            const errText = await res.text();
+            throw new Error(`API 錯誤 ${res.status}: ${errText}`);
+          }
+        } catch (e) {
+          if (i === retries - 1) throw e;
+        }
+        await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
+      }
+    }
+
+    // 呼叫 Gemini 2.5 Flash 生成劇本 JSON 結構
+    async function callGeminiAPI(prompt, systemInstruction) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              timeline: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    name: { type: "STRING" },
+                    imagePrompt: { type: "STRING" },
+                    duration: { type: "NUMBER" }
+                  },
+                  required: ["name", "imagePrompt", "duration"]
+                }
+              }
+            },
+            required: ["timeline"]
+          }
+        }
+      };
+
+      const data = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return data.candidates?.[0]?.content?.parts?.[0]?.text;
+    }
+
+    // 呼叫 Imagen 4.0 生成真實繪圖 Base64
+    async function callImagenAPI(promptText) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+      const payload = {
+        instances: [{ prompt: promptText }],
+        parameters: { sampleCount: 1 }
+      };
+
+      const data = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const base64Bytes = data.predictions?.[0]?.bytesBase64Encoded;
+      if (!base64Bytes) throw new Error("Imagen API 未能成功返回影像位元組");
+      return `data:image/png;base64,${base64Bytes}`;
+    }
+
+    // Gemini AI 工具箱 UI 切換
+    const tabStoryboardBtn = document.getElementById('tabStoryboardBtn');
+    const tabImagenBtn = document.getElementById('tabImagenBtn');
+    const tabStoryboardContent = document.getElementById('tabStoryboardContent');
+    const tabImagenContent = document.getElementById('tabImagenContent');
+
+    tabStoryboardBtn.addEventListener('click', () => {
+      tabStoryboardBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-900 text-brand-400 border border-slate-800/80 transition-all";
+      tabImagenBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all";
+      tabStoryboardContent.classList.remove('hidden');
+      tabImagenContent.classList.add('hidden');
+    });
+
+    tabImagenBtn.addEventListener('click', () => {
+      tabImagenBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-900 text-brand-400 border border-slate-800/80 transition-all";
+      tabStoryboardBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all";
+      tabImagenContent.classList.remove('hidden');
+      tabStoryboardContent.classList.add('hidden');
+    });
+
+    // 動作：一鍵生成 AI 故事板分鏡 (整合大腦與繪圖)
+    const btnGenerateStoryboard = document.getElementById('btnGenerateStoryboard');
+    btnGenerateStoryboard.addEventListener('click', async () => {
+      const subject = document.getElementById('aiProjectSubject').value.trim();
+      const style = document.getElementById('aiVisualStyle').value;
+      const sceneCount = parseInt(document.getElementById('aiSceneCount').value) || 4;
+
+      if (!subject) {
+        showToast("⚠️ 請先輸入您的影片企劃主旨！");
+        return;
+      }
+
+      showProgressOverlay("AI 影音協作大腦啟動中...", "正在使用 Gemini 2.5 規劃腳本大綱與分鏡Prompt...");
+
+      try {
+        const sysInst = `你是一個專業的影音導演與分鏡規劃師。請根據使用者輸入的「影片企劃主旨」與「視覺風格」，規劃出一套連續且精彩的剪輯分鏡故事板。
+你必須嚴格生成 JSON 格式。每個分鏡的 imagePrompt 請用英文寫成，並務必詳細描述分鏡中的構圖、主體動作，且完全融入「${style}」視覺風格，使其適合作為 Imagen 4.0 繪圖生成器的指令。`;
+        
+        const userPrompt = `請為我策劃一部主題為「${subject}」的宣傳片。我需要規劃 ${sceneCount} 個精細的連續分鏡故事板。`;
+        
+        // 呼叫 Gemini
+        const geminiResponseText = await callGeminiAPI(userPrompt, sysInst);
+        const parsedData = JSON.parse(geminiResponseText);
+        
+        if (!parsedData.timeline || parsedData.timeline.length === 0) {
+          throw new Error("腳本生成內容格式有誤");
+        }
+
+        const generatedTimeline = [];
+        
+        // 連續繪製分鏡 (Imagen 4.0)
+        for (let i = 0; i < parsedData.timeline.length; i++) {
+          const scene = parsedData.timeline[i];
+          showProgressOverlay(
+            `正在繪製分鏡 ${i + 1} / ${parsedData.timeline.length}`, 
+            `正在根據指令繪製：${scene.name}...`
+          );
+
+          // 呼叫 Imagen 生成真實畫面
+          const base64Img = await callImagenAPI(`${scene.imagePrompt}, masterpiece, high definition, visual style of ${style}`);
+          
+          generatedTimeline.push({
+            id: "ai-scene-" + Math.random().toString(36).substr(2, 9),
+            name: scene.name,
+            src: base64Img,
+            duration: scene.duration || 3.5,
+            type: 'image'
+          });
+        }
+
+        // 寫入數據庫實時同步
+        await updateProjectData({ timeline: generatedTimeline });
+        await sendChatMessage(`使用 Gemini AI 智慧工具箱生成了新的影片故事板（主題：${subject}，風格：${style}）`, 'action');
+        
+        hideProgressOverlay();
+        showToast("🎉 一鍵 AI 故事板分鏡同步成功！");
+
+      } catch (err) {
+        console.error("AI 故事板生成失敗：", err);
+        hideProgressOverlay();
+        showToast("❌ 生成失敗，請確認網路或 API Key 是否能成功呼叫。");
+      }
+    });
+
+    // 動作：一鍵生成 AI 繪圖 (Imagen 4.0)
+    const btnGenerateImage = document.getElementById('btnGenerateImage');
+    btnGenerateImage.addEventListener('click', async () => {
+      const prompt = document.getElementById('aiImagePrompt').value.trim();
+      if (!prompt) {
+        showToast("⚠️ 請輸入您想要繪製的 Prompt 描述！");
+        return;
+      }
+
+      showProgressOverlay("Imagen 4.0 繪圖中...", "正在由高畫質繪圖引擎處理影像位元組...");
+
+      try {
+        const base64Img = await callImagenAPI(prompt);
+        const newItem = {
+          id: "ai-img-" + Math.random().toString(36).substr(2, 9),
+          name: prompt.substring(0, 15) + "..._AI.jpg",
+          src: base64Img,
+          duration: defaultSlideDuration,
+          type: 'image'
+        };
+
+        const updatedTimeline = [...timelineItems, newItem];
+        await updateProjectData({ timeline: updatedTimeline.map(({id, name, src, duration, type}) => ({id, name, src, duration, type})) });
+        await sendChatMessage(`透過 AI Imagen 生成了一張高畫質素材：${newItem.name}`, 'action');
+        
+        document.getElementById('aiImagePrompt').value = '';
+        hideProgressOverlay();
+        showToast("🎉 AI 影像繪製成功並已實時同步！");
+      } catch (err) {
+        console.error("AI 繪圖生成失敗：", err);
+        hideProgressOverlay();
+        showToast("❌ 繪圖失敗，請稍後重試。");
+      }
+    });
+
+
     // ==========================================
     // 智慧型音訊與視訊對齊渲染引擎 (Sync Playback Control)
     // ==========================================
@@ -1174,7 +1479,6 @@ const firebaseConfig = {
       if (item.type === 'video' && item.element) {
         const video = item.element;
         if (isPlaying) {
-          // 計算影片當前播放點，以秒為單位，並防範溢出
           const targetTime = (elapsed / 1000) % video.duration;
           if (Math.abs(video.currentTime - targetTime) > 0.15) {
             video.currentTime = targetTime;
@@ -1221,7 +1525,7 @@ const firebaseConfig = {
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 36px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('請新增共享素材開始共同創作！', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('請新增共享素材或使用 AI 故事板開始共同創作！', canvas.width / 2, canvas.height / 2);
         return;
       }
 
@@ -1258,10 +1562,10 @@ const firebaseConfig = {
         }
       }
 
-      // 1. 同步視訊的進度與播放狀態 (智慧型同步)
+      // 同步視訊的進度與播放狀態 (智慧型同步)
       syncVideoPlayback(activeItem, itemElapsed);
       if (inTransition && nextItem) {
-        syncVideoPlayback(nextItem, 0); // 轉場前先同步下一個影格起點
+        syncVideoPlayback(nextItem, 0);
       }
 
       // 關閉其餘未啟用影片，釋放 GPU 解碼資源
@@ -1273,7 +1577,7 @@ const firebaseConfig = {
         }
       });
 
-      // 2. 轉場動畫繪製
+      // 轉場動畫繪製
       if (!inTransition) {
         drawMedia(activeItem.element, 1.0, 1.0, activeItem.type);
       } else {
@@ -1318,11 +1622,10 @@ const firebaseConfig = {
     function drawMedia(media, opacity, scale = 1.0, type = 'image') {
       if (!media) return;
       
-      // 安全機制：確認媒體資源處於就緒狀態
       if (type === 'image') {
         if (!media.complete) return;
       } else if (type === 'video') {
-        if (media.readyState < 2) return; // 確保有足夠畫面訊號再繪製
+        if (media.readyState < 2) return;
       }
 
       ctx.globalAlpha = opacity;
@@ -1368,7 +1671,6 @@ const firebaseConfig = {
       iconPlay.classList.remove('hidden');
       iconPause.classList.add('hidden');
       
-      // 停止所有影片並歸零進度
       timelineItems.forEach(item => {
         if (item.type === 'video' && item.element) {
           item.element.pause();
